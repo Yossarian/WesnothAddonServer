@@ -1,0 +1,4 @@
+.meta*
+*.pyc
+sqlite.db
+Thumbs.db
