@@ -63,7 +63,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
-ROOT_URLCONF = 'wesnoth_umc.urls'
+ROOT_URLCONF = 'urls'
 
 TEMPLATE_DIRS = (
 	'./templates'
@@ -79,5 +79,5 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.webdesign',
-    'wesnoth_umc.addons',
+    'addons',
 )
