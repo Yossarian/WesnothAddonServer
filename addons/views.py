@@ -1,4 +1,3 @@
-# Create your views here.
 from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
@@ -78,7 +77,16 @@ def remove(request, addon_id):
 	password = request.POST['password']
 	errors_credentials = not (login==password and login!='')
 	errors_permissions = not (login=='master' and password=='master')
-	return render_to_response('addons/confirmRemove.html', {'addon_id':addon_id,'addon': addon, 'errors_credentials':errors_credentials, 'errors_permissions':errors_permissions, 'remove_success':not(errors_credentials or errors_permissions)})
+	
+	if not (errors_permissions and errors_credentials):
+		addon.delete()
+	
+	return render_to_response('addons/confirmRemove.html',
+							  {'addon_id':addon_id,
+							   'addon': addon, 'errors_credentials':errors_credentials,
+							   'errors_permissions':errors_permissions,
+							   'remove_success':not(errors_credentials or errors_permissions)
+							   })
 	
 def adminWescampLog(request):
 	if request.user.is_staff:

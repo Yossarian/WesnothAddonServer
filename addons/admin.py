@@ -1,4 +1,4 @@
-from wesnoth_umc.addons.models import *
+from addons.models import *
 from django.contrib import admin
 
 admin.site.register(Author)
