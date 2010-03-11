@@ -1,13 +1,15 @@
 from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
+import re
+from django.utils.datetime_safe import datetime
 
 def index(request):
 	addon_list = Addon.objects.all().order_by('-name')
 	for addon in addon_list:
 		try:
 			addon.file_size = addon.file.size
-		except (IOError, WindowsError):
+		except (IOError, ValueError):
 			addon.file_size = False
 	return render_to_response('addons/addonList.html', {'addon_list': addon_list})
 
@@ -47,7 +49,35 @@ def publish(request):
 		errors_zip = False
 		try:
 			pbl = request.FILES['pbl']
-		except:
+			keys_vals = {}
+			for l in pbl.readlines():
+				m = re.match(r"(.*)=\"(.*)\"", l)
+				keys_vals[m.group(1)] = m.group(2)
+			addon = Addon()
+			addon.name = keys_vals['title']
+			addon.img = keys_vals['icon']
+			addon.ver = keys_vals['version']
+			addon.uploads = 1
+			addon.downloads = 0
+			addon.desc = keys_vals['description']
+			addon.lastUpdate = datetime.now()
+			
+			addon_type = AddonType.objects.get(type_name=keys_vals['type'])
+			addon.type = addon_type
+			addon.file = None
+			
+			authors_str = []
+			for author in re.split(r",", keys_vals['author']):
+				authors_str.append(author)
+			
+			addon.save()
+			for a in authors_str:
+				author = Author.objects.get(name=a)
+				addon.authors.add(author)
+			addon.save()
+			
+		except Exception as inst:
+			print inst
 			errors_pbl = True
 		try:
 			file = request.FILES['zip']
