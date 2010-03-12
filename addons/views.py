@@ -3,6 +3,7 @@ from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
 import re
 from django.utils.datetime_safe import datetime
+from django.contrib.auth import authenticate
 
 def index(request):
 	addon_list = Addon.objects.all().order_by('-name')
@@ -42,9 +43,10 @@ def rate(request, addon_id):
 
 
 def publish(request):
-	login = request.POST['login']
-	password = request.POST['password']
-	if login == 'master' and password == 'master':
+	login = username=request.POST['login']
+	user = authenticate(username=login, password=request.POST['password'])
+	
+	if user is not None:
 		errors_pbl = False
 		errors_zip = False
 		try:
