@@ -32,7 +32,10 @@
 <tr {% cycle 'class="alternate"' '' %}>
 	<td>{{addon.type}}</td>
 	
-	<td><span style="display:none">{{addon.name}}</span><img src="/test_media/icons/{{addon.img}}" alt="{{addon.img}}"/ width="72" height="72"></td>
+	<td><span style="display:none">{{addon.name}}</span>
+	<a href="{% url addons.views.details addon.id %}">
+		<img src="/test_media/icons/{{addon.img}}" alt="{{addon.img}}"/ width="72" height="72" />
+	</a></td>
 	
 	<td>{{addon.name}} {{addon.ver}}<br />
 	<a href="{% url addons.views.details addon.id %}">Details</a></td>
