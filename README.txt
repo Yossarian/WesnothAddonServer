@@ -1,10 +1,10 @@
-Aby uruchomiæ prototyp nale¿y:
- - Zainstalowaæ implementacjê jêzyka Python w wersji 2.6 ( http://www.python.org/download/ )
- - Zainstalowaæ platformê (framework) Django w wersji 1.1.1 ( http://www.djangoproject.com/download/ )
-Nastêpnie:
- - Przejœæ do katalogu z prototypem w linii poleceñ
- - Wpisaæ komendê ,,python manage.py runserver''
- - Skierowaæ przegl¹darkê internetow¹ na adres http://localhost:8000
+Aby uruchomiÄ‡ prototyp naleÅ¼y:
+ - ZainstalowaÄ‡ implementacjÄ™ jÄ™zyka Python w wersji 2.6 ( http://www.python.org/download/ )
+ - ZainstalowaÄ‡ platformÄ™ (framework) Django w wersji 1.1.1 ( http://www.djangoproject.com/download/ )
+NastÄ™pnie:
+ - PrzejÅ›Ä‡ do katalogu z prototypem w linii poleceÅ„
+ - WpisaÄ‡ komendÄ™ ,,python manage.py runserver''
+ - SkierowaÄ‡ przeglÄ…darkÄ™ internetowÄ… na adres http://localhost:8000
 
-Login i has³o do panelu administracyjnego: admin:admin
-Login i has³o do interfejsu prototypowego publikacji/usuwania dodatków: master:master
+Login i hasÅ‚o do panelu administracyjnego: admin:admin
+Login i hasÅ‚o do interfejsu prototypowego publikacji/usuwania dodatkÃ³w: master:master
