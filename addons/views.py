@@ -23,8 +23,8 @@ def details(request, addon_id):
 
 def getFile(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
-	#addon.downloads = addon.downloads + 1
-	#addon.save()
+	addon.downloads = addon.downloads + 1
+	addon.save()
 	return redirect(addon.file.url)
 
 def rate(request, addon_id):
