@@ -1,6 +1,7 @@
 from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
+from django.core.exceptions import ObjectDoesNotExist
 import re
 from django.utils.datetime_safe import datetime
 
@@ -49,35 +50,7 @@ def publish(request):
 		errors_zip = False
 		try:
 			pbl = request.FILES['pbl']
-			keys_vals = {}
-			for l in pbl.readlines():
-				m = re.match(r"(.*)=\"(.*)\"", l)
-				keys_vals[m.group(1)] = m.group(2)
-			addon = Addon()
-			addon.name = keys_vals['title']
-			addon.img = keys_vals['icon']
-			addon.ver = keys_vals['version']
-			addon.uploads = 1
-			addon.downloads = 0
-			addon.desc = keys_vals['description']
-			addon.lastUpdate = datetime.now()
-			
-			addon_type = AddonType.objects.get(type_name=keys_vals['type'])
-			addon.type = addon_type
-			addon.file = None
-			
-			authors_str = []
-			for author in re.split(r",", keys_vals['author']):
-				authors_str.append(author)
-			
-			addon.save()
-			for a in authors_str:
-				author = Author.objects.get(name=a)
-				addon.authors.add(author)
-			addon.save()
-			
-		except Exception as inst:
-			print inst
+		except:
 			errors_pbl = True
 		try:
 			file = request.FILES['zip']
@@ -87,6 +60,70 @@ def publish(request):
 			return render_to_response('addons/publishForm.html', {'errors_zip' : errors_zip,
 			'errors_pbl' : errors_pbl,
 			'loginVal' : login})
+
+		def error_response(title, error):
+			return render_to_response('addons/error.html',
+						  {'errorType':title, 'errorDesc':error})
+
+		keys_vals = {}
+		num = 0
+		for l in pbl.readlines():
+			num += 1
+			m = re.match(r"^(.*)=\"(.*)\"$", l)
+			if m == None:
+				return error_response('Pbl error', ['Line '+str(num)+' is invalid'])
+			keys_vals[m.group(1)] = m.group(2)
+		
+		addon = Addon()
+		errors_other = False
+		error_title = ''
+		error_lines = []
+		
+		try:
+			addon.name = keys_vals['title']
+		except LookupError:
+			return error_response('PBL error', ['Pbl doesn\'t have title key'])
+		try:
+			addon.img = keys_vals['icon']
+		except LookupError:
+			return error_response('PBL error', ['Pbl doesn\'t have icon key'])
+		try:
+			addon.img = keys_vals['version']
+		except LookupError:
+			return error_response('PBL error', ['Pbl doesn\'t have version key'])
+		try:
+			addon.desc = keys_vals['description']
+		except LookupError:
+			return error_response('PBL error', ['Pbl doesn\'t have description key'])
+
+		try:
+			addon_type = AddonType.objects.get(type_name=keys_vals['type'])
+		except ObjectDoesNotExist:
+			return error_response('PBL error', ['Addon has a wrong type'])
+
+		try:	
+			addon.lastUpdate = datetime.now()
+			
+			addon.type = addon_type
+			addon.file = None
+			
+			authors_str = []
+			for author in re.split(r",", keys_vals['author']):
+				authors_str.append(author)
+
+			addon.uploads = 1
+			addon.downloads = 0			
+
+			addon.save()
+			for a in authors_str:
+				author = Author.objects.get(name=a)
+				addon.authors.add(author)
+			addon.save()
+
+		except Exception as inst:
+			return render_to_response('addons/error.html',
+						  {'errorType':'PBL error', 'errorDesc':
+							   [inst]})
 		else:
 			return render_to_response('addons/publishForm.html', {'publish_success' : True,
 			'loginVal' : login})
