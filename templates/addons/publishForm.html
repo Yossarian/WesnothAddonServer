@@ -31,22 +31,89 @@ fieldset {
 	width: 80%;
 	text-align: center
 }
+
+label.inputLabel {
+	height: 100%; 
+	margin: 0;
+}
+
+label.credentials {	
+	{% if errors_credentials %} 
+		color: #F00; 
+		font-weight: bold;
+	{% endif %}
+}
+
+label.pbl {	
+	{% if errors_pbl %} 
+		color: #F00; 
+		font-weight: bold;
+	{% endif %}
+}
+
+label.zip {	
+	{% if errors_zip %} 
+		color: #F00; 
+		font-weight: bold;
+	{% endif %}
+}
+
+div.formLine {
+	style="height: 50%;
+}
+
+div.labelBlock {
+	width: 50%; 
+	height: 100%;
+	float: left; 
+	text-align: right;
+}
+
+div.inputBlock {
+	width: 50%; 
+	height: 100%;
+	float: right; 
+	text-align: left;
+}
+
+div.spacer {
+	clear:both; 
+	padding: 3px;
+}
+
 </style>
 	<center><h1>Publish your addon</h1><br />	
 	<form action="{% url addons.views.publish %}" method="post"
 				enctype="multipart/form-data" onSubmit="return fakeProgress();">
-	<table border=0 width="55%" style="border-style: solid; border-width: 1px; border-color: #000;
+	<table width="65%" style="border-style: solid; border-width: 1px; border-color: #000;
 	background-color: #E7D9C0;">
 	    <tr>
 	        <td valign=top>
 				
 					<fieldset>
 						<legend>Forum credentials</legend>
-						<div style="width: 293px;">
-						<p align=right {% if errors_credentials %}style="height: 20px; color: #F00; font-weight: bold"{% else %}style="height: 20px" {% endif %}>Login:<input type="text" name="login" value="{{loginVal}}"></input></p>
+						<div class="formLine">
+							<div class="labelBlock">
+							<label for="login" class="inputLabel, credentials">Login:</label>
+							</div>						
 						
-						<p align=right {% if errors_credentials %}style="height: 20px; color: #F00; font-weight: bold"{% else %}style="height: 20px" {% endif %}>Pasword:<input type="password" name="password"></input></p>
+							<div class="inputBlock">
+							<input type="text" name="login" value="{{loginVal}}"></input>
+							</div>						
 						</div>
+						
+						<div class="spacer"></div>
+						
+						<div class="formLine">
+							<div class="labelBlock">
+							<label for="password" class="inputLabel, credentials">Pasword:</label>
+							</div>
+							
+							<div class="inputBlock">
+							<input type="password" name="password"></input>
+							</div>						
+						</div>
+						
 					</fieldset>
 					
 		    </td>
@@ -55,9 +122,28 @@ fieldset {
 		    <td valign=top>
 					<fieldset>
 						<legend>Addon to be published or updated</legend>
-						<p align=right {% if errors_pbl %}style="height: 20px; color: #F00; font-weight: bold"{% else %}style="height: 20px" {% endif %}>PBL File:<input size="19" type="file" name="pbl"></input></p>
-						<p align=right {% if errors_zip %}style="height: 20px; color: #F00; font-weight: bold"{% else %}style="height: 20px" {% endif %}>Zipped addon folder:<input size="19" type="file" name="zip"></input></p>
+						<div class="formLine">
+							<div class="labelBlock">
+							<label for="pbl" class="inputLabel, pbl">PBL File:</label>
+							</div>
+							
+							<div class="inputBlock">
+							<input size="15" type="file" name="pbl"></input>
+							</div>
+						</div>
 						
+						<div class="spacer"></div>
+						
+						<div class="formLine">
+							<div class="labelBlock">
+							<label for="zip" class="inputLabel, zip">Zipped addon folder:</label>
+							</div>
+							
+							<div class="inputBlock">
+							<input size="15" type="file" name="zip"></input>							
+							</div>
+						</div>	
+					</div>
 					</fieldset>
 		    </td>
 		    </tr>
