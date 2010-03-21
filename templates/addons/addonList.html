@@ -4,6 +4,11 @@
 
 {% block content %}
 <script type="text/javascript" src="/test_media/js/sorttable-good.js"></script>
+<script type="text/javascript">
+var zzfg = new domFunction(function() {
+	document.getElementById("iconh").innerHTML = st_getInnerText(document.getElementById("iconh"));
+	});
+</script>
 <style type="text/css">
 #addonlist thead tr th {
 	border-bottom: 2px solid black;
@@ -19,7 +24,7 @@
 <table width="100%" class="sortable" id="addonlist">
 <thead><tr>
 <th align="left" width="15%">Type</th>
-<th align="left">Icon</th>
+<th align="left" id="iconh">Icon</th>
 <th align="left">Name</th>
 <th align="left" width="13%">User rating</th>
 <th align="left" width="20%">Traffic</th>
