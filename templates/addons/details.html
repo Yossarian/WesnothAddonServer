@@ -41,7 +41,11 @@
 							{% endfor %}
 						</ul>
 						<h3>User rating:</h3>
-						{{addon.get_rating|floatformat:1}} <img src="/test_media/stars_{{addon.get_rating|floatformat:0}}.gif"/>						
+						{% if addon.get_rating %}
+							{{addon.get_rating|floatformat:1}} <img src="/test_media/stars_{{addon.get_rating|floatformat:0}}.gif"/>						
+						{% else %}
+							No user ratings yet.
+						{% endif %}
 					<div id="ratebox">
 					Your rating: 
 					<form action="{% url addons.views.rate addon.id %}" method="post">

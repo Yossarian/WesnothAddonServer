@@ -3,7 +3,6 @@ from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
 import re
 from django.utils.datetime_safe import datetime
-from django.contrib.auth import authenticate
 
 def index(request):
 	addon_list = Addon.objects.all().order_by('-name')
@@ -24,8 +23,8 @@ def details(request, addon_id):
 
 def getFile(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
-	#addon.downloads = addon.downloads + 1
-	#addon.save()
+	addon.downloads = addon.downloads + 1
+	addon.save()
 	return redirect(addon.file.url)
 
 def rate(request, addon_id):
@@ -43,10 +42,9 @@ def rate(request, addon_id):
 
 
 def publish(request):
-	login = username=request.POST['login']
-	user = authenticate(username=login, password=request.POST['password'])
-	
-	if user is not None:
+	login = request.POST['login']
+	password = request.POST['password']
+	if login == 'master' and password == 'master':
 		errors_pbl = False
 		errors_zip = False
 		try:
