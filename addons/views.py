@@ -24,6 +24,15 @@ def index(request):
 		except (IOError, ValueError):
 			addon.file_size = False
 	return render_to_response('addons/addonList.html', {'addon_list': addon_list})
+	
+
+def addonListText():
+	sAddonList = '[addonList]\n'
+	sAddonList += 'total='+str(Addon.objects.all().count())+'\n'
+	for addon in Addon.objects.all():
+		sAddonList += detailsText(addon)
+	sAddonList += '[/addonList]\n'
+	return HttpResponse(sAddonList)
 
 def details(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
@@ -32,6 +41,25 @@ def details(request, addon_id):
 	except (IOError, WindowsError):
 		addon.file_size = False
 	return render_to_response('addons/details.html', {'addon': addon})
+	#return HttpResponse(detailsText(addon))
+
+def detailsText(addon):
+	sDesc = '[addon]\n'
+	sDesc += 'id='+str(addon.id)+'\n'
+	sDesc += 'name='+addon.name+'\n'
+	sDesc += 'img='+addon.img+'\n'
+	sDesc += 'ver='+addon.ver+'\n'
+	sDesc += 'downloads='+str(addon.downloads)+'\n'
+	sDesc += 'uploads='+str(addon.uploads)+'\n'
+	sDesc += 'file='+str(addon.file)+'\n'
+	sDesc += 'type='+str(addon.type)+'\n'
+	sDesc += 'authors='+";".join(map(lambda a: a.name, addon.authors.all()))
+	sDesc += '\n'
+	sDesc += 'desc='+addon.desc+'\n'
+	sDesc += 'lastUpdate='+str(addon.lastUpdate)+'\n'
+	sDesc += 'rating='+str(addon.get_rating())+'\n'
+	sDesc += '[/addon]\n'
+	return sDesc
 
 def getFile(request, addon_id):
 	logger.info("Download of addon "+addon_id+" requested from "+request.META['REMOTE_ADDR']);
