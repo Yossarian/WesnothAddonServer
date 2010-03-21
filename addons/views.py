@@ -127,9 +127,9 @@ def remove(request, addon_id):
 	if not (errors_permissions and errors_credentials):
 		addon.delete()
 		logger.info("Addon #"+addon_id+"("+addon.name+") deleted by user "+login)
-	if (errors_credentials)
+	if (errors_credentials):
 		logger.info("Attempt to login as "+login+" from "+request.META['REMOTE_ADDR']+" failed during an attempt to remove addon #"+addon_id+"("+addon.name+")");
-	if (errors_credentials)
+	if (errors_credentials):
 		logger.info("Attempt to remove addon #"+addon_id+"("+addon.name+") by "+login+" from "+request.META['REMOTE_ADDR']+" failed due to insufficient credentials.");
 	return render_to_response('addons/confirmRemove.html',
 							  {'addon_id':addon_id,
