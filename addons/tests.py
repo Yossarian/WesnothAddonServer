@@ -31,5 +31,18 @@ class SimpleTest(TestCase):
 		#Test if specyfing simple iface in GET renders text output for addonList
 		response = self.client.get('/addons/', {'simple_iface' : 'true'}, follow=True)
 		self.assertEquals(response.content, addonListText().content)
-		
 	
+	def test_nonexisting_addon_details(self):
+		#Test if request for a nonexisting addon id results in 404
+		response = self.client.get('/addons/details/0', follow=True)
+		self.assertContaints(response, status_code=404)
+	
+	def test_nonexisting_addon_remove(self):
+		#Test if request for a nonexisting addon id results in 404
+		response = self.client.get('/addons/remove/0', follow=True)
+		self.assertContaints(response, status_code=404)
+	
+	def test_nonexisting_addon_rate(self):
+		#Test if request for a nonexisting addon id results in 404
+		response = self.client.get('/addons/rate/0', follow=True)
+		self.assertContaints(response, status_code=404)
