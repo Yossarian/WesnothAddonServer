@@ -22,8 +22,14 @@ class SimpleTest(TestCase):
 		self.assertEquals(a.get_rating(), 3.0)
 		
 	def test_details_script_iface(self):
-		#Test if specyfing simple iface in POST renders text output
+		#Test if specyfing simple iface in GET renders text output for details
 		addon = Addon.objects.get(id=3)
 		response = self.client.get('/addons/details/3', {'simple_iface' : 'true'}, follow=True)
 		self.assertEquals(response.content, detailsText(addon))
+	
+	def test_addonList_script_iface(self):
+		#Test if specyfing simple iface in GET renders text output for addonList
+		response = self.client.get('/addons/', {'simple_iface' : 'true'}, follow=True)
+		self.assertEquals(response.content, addonListText().content)
+		
 	
