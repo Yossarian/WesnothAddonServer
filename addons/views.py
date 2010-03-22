@@ -1,6 +1,7 @@
 from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
+from django.core.exceptions import ObjectDoesNotExist
 import re
 from django.utils.datetime_safe import datetime
 
@@ -29,7 +30,7 @@ def details(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
 	try:
 		addon.file_size = addon.file.size
-	except (IOError, WindowsError):
+	except (IOError, NameError, ValueError):
 		addon.file_size = False
 	return render_to_response('addons/details.html', {'addon': addon})
 
@@ -62,35 +63,7 @@ def publish(request):
 		errors_zip = False
 		try:
 			pbl = request.FILES['pbl']
-			keys_vals = {}
-			for l in pbl.readlines():
-				m = re.match(r"(.*)=\"(.*)\"", l)
-				keys_vals[m.group(1)] = m.group(2)
-			addon = Addon()
-			addon.name = keys_vals['title']
-			addon.img = keys_vals['icon']
-			addon.ver = keys_vals['version']
-			addon.uploads = 1
-			addon.downloads = 0
-			addon.desc = keys_vals['description']
-			addon.lastUpdate = datetime.now()
-			
-			addon_type = AddonType.objects.get(type_name=keys_vals['type'])
-			addon.type = addon_type
-			addon.file = None
-			
-			authors_str = []
-			for author in re.split(r",", keys_vals['author']):
-				authors_str.append(author)
-			
-			addon.save()
-			for a in authors_str:
-				author = Author.objects.get(name=a)
-				addon.authors.add(author)
-			addon.save()
-			
-		except Exception as inst:
-			print inst
+		except:
 			errors_pbl = True
 		try:
 			file = request.FILES['zip']
@@ -101,10 +74,71 @@ def publish(request):
 			return render_to_response('addons/publishForm.html', {'errors_zip' : errors_zip,
 			'errors_pbl' : errors_pbl,
 			'loginVal' : login})
-		else:
-			logger.info("User "+login+" from "+request.META['REMOTE_ADDR']+" has successfully published addon #"+addon.id+" ("+addon.name+")");
-			return render_to_response('addons/publishForm.html', {'publish_success' : True,
-			'loginVal' : login})
+
+		def error_response(title, error):
+			return render_to_response('addons/error.html',
+						  {'errorType':title, 'errorDesc':error})
+
+		keys_vals = {}
+		num = 0
+		for l in pbl.readlines():
+			num += 1
+			m = re.match(r"^(.*)=\"(.*)\"$", l)
+			if m == None:
+				return error_response('Pbl error', ['Line '+str(num)+' is invalid'])
+			keys_vals[m.group(1)] = m.group(2)
+		
+		needed_keys = ['title', 'icon', 'version', 'description', 'author', 'type']
+
+		for key in needed_keys:
+			try:
+				keys_vals[key]
+			except LookupError:
+				return error_response('PBL error', ['Pbl doesn\'t have ' + key + ' key'])
+
+		try:
+			addon_type = AddonType.objects.get(type_name=keys_vals['type'])
+		except ObjectDoesNotExist:
+			return error_response('PBL error', ['Addon has a wrong type'])
+
+		try:
+			addon = Addon.objects.get(name=keys_vals['title'])
+			addon.uploads += 1
+			addon.file.delete()
+		except ObjectDoesNotExist:
+			addon = Addon()
+			addon.name = keys_vals['title']
+			addon.uploads = 1
+			addon.downloads = 0
+		
+		addon.ver = keys_vals['version']
+		addon.img = keys_vals['icon']
+		addon.desc = keys_vals['description']
+		addon.type = addon_type
+		addon.file = file
+		addon.lastUpdate = datetime.now()
+		addon.save()
+		
+		authors_str = []
+		for author in re.split(r",", keys_vals['author']):
+			authors_str.append(author)
+
+		addon.authors.clear()
+
+		for a in authors_str:
+			author = None
+			try:
+				author = Author.objects.get(name=a)
+			except ObjectDoesNotExist:
+				author = Author(name=a)
+				author.save()
+			addon.authors.add(author)
+		
+		addon.save()
+
+		logger.info("User "+login+" from "+request.META['REMOTE_ADDR']+" has successfully published addon #"+addon.id+" ("+addon.name+")");
+		return render_to_response('addons/publishForm.html', {'publish_success' : True,
+								      'loginVal' : login})
 	else:
 		logger.info("Attempt to login as "+login+" from "+request.META['REMOTE_ADDR']+" failed during an attempt to publish.");
 		return render_to_response('addons/publishForm.html', {'errors_credentials' : True,

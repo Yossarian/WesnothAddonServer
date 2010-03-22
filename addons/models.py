@@ -3,7 +3,6 @@ from django.db.models import Avg
 
 class Author(models.Model):
 	name = models.CharField(max_length=30)
-	forum_id = models.IntegerField(unique=True)
 
 	def __unicode__(self):
 		return self.name	
