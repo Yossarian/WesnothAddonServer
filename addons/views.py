@@ -40,8 +40,10 @@ def details(request, addon_id):
 		addon.file_size = addon.file.size
 	except (IOError, WindowsError):
 		addon.file_size = False
-	return render_to_response('addons/details.html', {'addon': addon})
-	#return HttpResponse(detailsText(addon))
+	if 'simple_iface' in request.GET:
+		return HttpResponse(detailsText(addon))
+	else:
+		return render_to_response('addons/details.html', {'addon': addon})
 
 def detailsText(addon):
 	sDesc = '[addon]\n'
