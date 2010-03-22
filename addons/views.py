@@ -18,7 +18,7 @@ def details(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
 	try:
 		addon.file_size = addon.file.size
-	except (IOError, WindowsError):
+	except (IOError, NameError, ValueError):
 		addon.file_size = False
 	return render_to_response('addons/details.html', {'addon': addon})
 
@@ -75,9 +75,7 @@ def publish(request):
 			keys_vals[m.group(1)] = m.group(2)
 		
 		addon = Addon()
-		errors_other = False
-		error_title = ''
-		error_lines = []
+		authors = ''
 		
 		try:
 			addon.name = keys_vals['title']
@@ -88,45 +86,58 @@ def publish(request):
 		except LookupError:
 			return error_response('PBL error', ['Pbl doesn\'t have icon key'])
 		try:
-			addon.img = keys_vals['version']
+			addon.ver = keys_vals['version']
 		except LookupError:
 			return error_response('PBL error', ['Pbl doesn\'t have version key'])
 		try:
 			addon.desc = keys_vals['description']
 		except LookupError:
 			return error_response('PBL error', ['Pbl doesn\'t have description key'])
+		try:
+			authors = keys_vals['author']
+		except LookupError:
+			return error_response('PBL error', ['Pbl doesn\'t have author key'])
+		try:
+			keys_vals['type']
+		except LookupError:
+			return error_response('PBL error', ['Pbl doesn\'t have type key'])
 
 		try:
 			addon_type = AddonType.objects.get(type_name=keys_vals['type'])
 		except ObjectDoesNotExist:
 			return error_response('PBL error', ['Addon has a wrong type'])
 
-		try:	
-			addon.lastUpdate = datetime.now()
-			
-			addon.type = addon_type
-			addon.file = None
-			
-			authors_str = []
-			for author in re.split(r",", keys_vals['author']):
-				authors_str.append(author)
-
-			addon.uploads = 1
-			addon.downloads = 0			
-
-			addon.save()
-			for a in authors_str:
+		addon.type = addon_type
+		addon.file = None
+		addon.uploads = 1
+		addon.downloads = 0
+		addon.lastUpdate = datetime.now()
+		
+		authors_str = []
+		for author in re.split(r",", authors):
+			authors_str.append(author)
+		addon.save()
+		
+		for a in authors_str:
+			author = None
+			try:
 				author = Author.objects.get(name=a)
-				addon.authors.add(author)
-			addon.save()
+			except ObjectDoesNotExist:
+				print a
+				author = Author(name=a)
+				author.save()
+			addon.authors.add(author)
+		
+		addon.save()
 
-		except Exception as inst:
-			return render_to_response('addons/error.html',
-						  {'errorType':'PBL error', 'errorDesc':
-							   [inst]})
-		else:
-			return render_to_response('addons/publishForm.html', {'publish_success' : True,
-			'loginVal' : login})
+		#except Exception as inst:
+		#	return render_to_response('addons/error.html',
+		#				  {'errorType':'PBL error', 'errorDesc':
+		#		   [inst]})
+
+
+		return render_to_response('addons/publishForm.html', {'publish_success' : True,
+								      'loginVal' : login})
 	else:
 		return render_to_response('addons/publishForm.html', {'errors_credentials' : True,
 		'loginVal' : login})
