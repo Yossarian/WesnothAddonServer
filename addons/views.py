@@ -17,13 +17,16 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 def index(request):
-	addon_list = Addon.objects.all().order_by('-name')
-	for addon in addon_list:
-		try:
-			addon.file_size = addon.file.size
-		except (IOError, ValueError):
-			addon.file_size = False
-	return render_to_response('addons/addonList.html', {'addon_list': addon_list})
+	if 'simple_iface' in request.GET:
+		return addonListText()
+	else:
+		addon_list = Addon.objects.all().order_by('-name')
+		for addon in addon_list:
+			try:
+				addon.file_size = addon.file.size
+			except (IOError, ValueError):
+				addon.file_size = False
+		return render_to_response('addons/addonList.html', {'addon_list': addon_list})
 	
 
 def addonListText():
