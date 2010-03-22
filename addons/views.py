@@ -77,14 +77,20 @@ def rate(request, addon_id):
 	try:
 		value = int(request.POST['rating'])
 	except (KeyError, ValueError):
-		return HttpResponseServerError("bad rating value")
+		if 'simple_iface' in request.GET:
+			return HttpResponse("bad rating value")
+		else:
+			return HttpResponseServerError("bad rating value")
 	addon = Addon.objects.get(id=addon_id)
 	r = Rating()
 	r.value = value
 	r.ip = request.get_host()
 	r.addon = addon
 	r.save()
-	return render_to_response('addons/details.html', {'rated' : True, 'addon_id': addon_id, 'addon': addon, 'rate_val': value})
+	if 'simple_iface' in request.GET:
+		return HttpResponse('success')
+	else:
+		return render_to_response('addons/details.html', {'rated' : True, 'addon_id': addon_id, 'addon': addon, 'rate_val': value})
 
 
 def publish(request):
