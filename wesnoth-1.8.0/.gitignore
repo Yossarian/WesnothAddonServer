@@ -1,0 +1,15 @@
+/build
+wesnoth.exe
+wesnothd.exe
+wesnoth-debug.exe
+wesnothd-debug.exe
+/wesnoth
+/wesnothd
+/wesnoth-debug
+/wesnothd-debug
+/stderr.txt
+/stdout.txt
+/.scons-option-cache
+/config.h
+/userdata
+*.o
