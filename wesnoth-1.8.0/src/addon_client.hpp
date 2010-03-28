@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <curl\curl.h>
+#include <curl/curl.h>
 
 namespace network {
 
