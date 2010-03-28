@@ -3,6 +3,11 @@
 
 using namespace network;
 
+addon_client_error::addon_client_error(std::string why) :
+std::runtime_error(why)
+{
+}
+
 addon_client::addon_client(void)
 {
 	handle_ = curl_easy_init();

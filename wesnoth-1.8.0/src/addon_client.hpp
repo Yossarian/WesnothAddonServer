@@ -1,7 +1,7 @@
 #ifndef ADDON_CLIENT_HPP_INCLUDED
 #define ADDON_CLIENT_HPP_INCLUDED
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <curl\curl.h>
@@ -12,13 +12,10 @@ namespace network {
 exception thrown by various unsafe methods of addon_client
 */
 class addon_client_error :
-	public std::exception
+	public std::runtime_error
 {
 public:
-	addon_client_error(std::string why)
-	{
-		std::exception(why.c_str());
-	}
+	addon_client_error(std::string why);
 };
 
 /*
