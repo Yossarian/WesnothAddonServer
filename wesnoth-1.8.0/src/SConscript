@@ -146,6 +146,7 @@ wesnoth_sources = Split("""
     about.cpp
     actions.cpp
     addon_checks.cpp
+    addon_client.cpp
     addon_management.cpp
     ai/actions.cpp
     ai/composite/ai.cpp
