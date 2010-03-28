@@ -217,6 +217,9 @@ endif(ENABLE_GAME)
 
 # get languages
 file(READ po/LINGUAS LINGUAS)
+if(NOT LINGUAS)
+	set(LINGUAS " ")
+endif(NOT LINGUAS)
 string(REPLACE "\n" "" LINGUAS ${LINGUAS})
 separate_arguments(LINGUAS)
 

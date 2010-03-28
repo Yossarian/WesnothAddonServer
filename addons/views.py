@@ -140,8 +140,14 @@ def publish(request):
 		except ObjectDoesNotExist:
 			return error_response('PBL error', ['Addon has a wrong type'])
 
+		authors_str = []
+		for author in re.split(r",", keys_vals['author']):
+			authors_str.append(author)
+
 		try:
 			addon = Addon.objects.get(name=keys_vals['title'])
+			if len(addon.authors.filter(name=login)) == 0:
+				return error_response('Author error', ['This user is not one of authors'])
 			addon.uploads += 1
 			addon.file.delete()
 		except ObjectDoesNotExist:
@@ -157,10 +163,6 @@ def publish(request):
 		addon.file = file
 		addon.lastUpdate = datetime.now()
 		addon.save()
-		
-		authors_str = []
-		for author in re.split(r",", keys_vals['author']):
-			authors_str.append(author)
 
 		addon.authors.clear()
 
