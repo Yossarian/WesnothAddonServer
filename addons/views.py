@@ -54,16 +54,17 @@ def detailsText(addon):
 	sDesc += 'id='+str(addon.id)+'\n'
 	sDesc += 'name='+addon.name+'\n'
 	sDesc += 'img='+addon.img+'\n'
-	sDesc += 'ver='+addon.ver+'\n'
+	sDesc += 'version='+addon.ver+'\n'
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
 	sDesc += 'uploads='+str(addon.uploads)+'\n'
-	sDesc += 'file='+str(addon.file)+'\n'
+	sDesc += 'file='+str(addon.file)[7:]+'\n' #cut for addons/
 	sDesc += 'type='+str(addon.type)+'\n'
 	sDesc += 'authors='+";".join(map(lambda a: a.name, addon.authors.all()))
 	sDesc += '\n'
 	sDesc += 'desc='+addon.desc+'\n'
-	sDesc += 'lastUpdate='+str(addon.lastUpdate)+'\n'
+	sDesc += 'timestamp='+str(addon.lastUpdate)+'\n'
 	sDesc += 'rating='+str(addon.get_rating())+'\n'
+	sDesc += 'size='+str(addon.file.size)+'\n'
 	sDesc += '[/addon]\n'
 	return sDesc
 

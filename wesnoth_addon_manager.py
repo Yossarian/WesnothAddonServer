@@ -13,6 +13,7 @@ import sys, os.path, re, time, glob, shutil
 from subprocess import Popen
 import wesnoth.wmldata as wmldata
 import wesnoth.wmlparser as wmlparser
+import urllib2
 from wesnoth.campaignserver_client import CampaignClient
 
 if __name__ == "__main__":
@@ -179,79 +180,62 @@ if __name__ == "__main__":
         return uploads, version
 
     campaign_list = None
-
+	    
     if options.list:
-        cs = CampaignClient(address)
-        campaign_list = data = cs.list_campaigns()
-        if data:
-            campaigns = data.get_or_create_sub("campaigns")
-            if options.wml:
-                for campaign in campaigns.get_all("campaign"):
-                    campaign.debug(show_contents = True,
-                        use_color = options.color)
-            else:
-                column_sizes = [10, 5, 10, 7, 8, 8, 10, 5, 10, 13]
-                columns = [["type", "name", "title", "author",
+		req=urllib2.Request('http://'+options.address+'/addons/?simple_iface')
+		response=urllib2.urlopen(req)
+		responsedata = response.read()
+		campaign_list = response.read()
+		parser = wmlparser.Parser(None)
+		parser.parse_text(responsedata)
+		data = wmldata.DataSub("addonList")
+		parser.parse_top(data)
+		
+		if data:
+			campaigns = data.get_or_create_sub("addonList")
+			if options.wml:
+				for campaign in campaigns.get_all("addon"):
+					campaign.debug(show_contents = True,use_color = options.color)
+			else:
+				#translations due to already too big width	
+				column_sizes = [10, 5, 10, 7, 8, 8, 10, 5, 10]#, 13]
+				columns = [["type", "name", "title", "authors",
                     "version", "uploads", "downloads",
-                    "size", "timestamp", "translate"]]
-                for campaign in campaigns.get_all("campaign"):
-                    column = [
+                    "size", "timestamp"]]#, "translate"]]
+				for campaign in campaigns.get_all("addon"):
+					column = [
                         campaign.get_text_val("type", "?"),
+                        campaign.get_text_val("file", "?"),
                         campaign.get_text_val("name", "?"),
-                        campaign.get_text_val("title", "?"),
-                        campaign.get_text_val("author", "?"),
+                        campaign.get_text_val("authors", "?"),
                         campaign.get_text_val("version", "?"),
                         campaign.get_text_val("uploads", "?"),
                         campaign.get_text_val("downloads", "?"),
                         campaign.get_text_val("size", "?"),
-                        time.ctime(int(campaign.get_text_val("timestamp", "0"))),
-                        campaign.get_text_val("translate", "?")]
-                    columns.append(column)
-                    for i, s in enumerate(column_sizes):
-                        if 1 + len(column[i]) > s:
-                            column_sizes[i] = 1 + len(column[i])
-                for c in columns:
-                    for i, f in enumerate(c):
-                        sys.stdout.write(f.ljust(column_sizes[i]))
-                    sys.stdout.write("\n")
-            for message in data.find_all("message", "error"):
-                print message.get_text_val("message")
-        else:
-            sys.stderr.write("Could not connect.\n")
+						campaign.get_text_val("timestamp","?"),
+                        #time.ctime(int(campaign.get_text_val("timestamp", "0"))),
+                        #campaign.get_text_val("translate", "?")]
+						]
+					columns.append(column)
+					for i, s in enumerate(column_sizes):
+						if 1 + len(column[i]) > s:
+							column_sizes[i] = 1 + len(column[i])
+				for c in columns:
+					for i, f in enumerate(c):
+						sys.stdout.write(f.ljust(column_sizes[i]))
+					sys.stdout.write("\n")
+			for message in data.find_all("message", "error"):
+				print message.get_text_val("message")
+		else:
+			sys.stderr.write("Could not connect.\n")
 
     elif options.download:
-        cs = CampaignClient(address)
-        fetchlist = []
-        campaign_list = data = cs.list_campaigns()
-        if data:
-            campaigns = data.get_or_create_sub("campaigns")
-            for campaign in campaigns.get_all("campaign"):
-                name = campaign.get_text_val("name", "?")
-                type = campaign.get_text_val("type", "")
-                version = campaign.get_text_val("version", "")
-                uploads = campaign.get_text_val("uploads", "")
-                if re.escape(options.download).replace("\\_", "_") == options.download:
-                    if name == options.download:
-                        fetchlist.append((name, version, uploads))
-                elif not options.type or options.type == type:
-                    if re.search(options.download, name):
-                        fetchlist.append((name, version, uploads))
+		req=urllib2.Request('http://'+address+'/addons/download/'+options.download+'/')
+		response=urllib2.urlopen(req)
+		tehfile=response.read()
+		outp = open(str(options.download),"w")
+		outp.write(tehfile)
 
-        for name, version, uploads in fetchlist:
-            info = os.path.join(options.campaigns_dir, name, "_info.cfg")
-            local_uploads, local_version = get_info(info)
-            if uploads != local_uploads:
-                # The uploads > local_uploads likely means a server reset
-                if version != local_version or uploads > local_uploads:
-                    get(name, version, uploads, options.campaigns_dir)
-                else:
-                    print "Not downloading", name, \
-                        "as the version already is", local_version, \
-                        "(The add-on got re-uploaded.)"
-            else:
-                if options.verbose:
-                    print "Not downloading", name, \
-                        "because it is already up-to-date."
                         
     elif options.unpack:
         cs = CampaignClient(address)
