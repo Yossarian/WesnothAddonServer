@@ -180,7 +180,7 @@ def publish(request):
 		
 		addon.save()
 
-		logger.info("User "+login+" from "+request.META['REMOTE_ADDR']+" has successfully published addon #"+addon.id+" ("+addon.name+")");
+		logger.info("User "+login+" from "+request.META['REMOTE_ADDR']+" has successfully published addon #"+str(addon.id)+" ("+addon.name+")");
 		return render_to_response('addons/publishForm.html', {'publish_success' : True,
 								      'loginVal' : login})
 	else:

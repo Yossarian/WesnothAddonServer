@@ -72,7 +72,7 @@ TEMPLATE_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 )
 
-AUTHENTICATION_BACKENDS = ('addons.phpbb_auth.PhpbbBackend',
+AUTHENTICATION_BACKENDS = (#'addons.phpbb_auth.PhpbbBackend',
                            'django.contrib.auth.backends.ModelBackend',)
 
 INSTALLED_APPS = (
