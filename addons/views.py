@@ -202,7 +202,7 @@ def remove(request, addon_id):
 	errors_credentials = not (login==password and login!='')
 	errors_permissions = not (login=='master' and password=='master')
 	
-	if not (errors_permissions and errors_credentials):
+	if not (errors_permissions or errors_credentials):
 		addon.delete()
 		logger.info("Addon #"+addon_id+"("+addon.name+") deleted by user "+login)
 	if (errors_credentials):
