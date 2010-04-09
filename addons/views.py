@@ -10,6 +10,10 @@ import logging.handlers
 logger = logging.getLogger('project_logger')
 logger.setLevel(logging.INFO)
 
+import time
+import datetime
+
+
 LOG_FILENAME = 'log.txt'
 LOG_MSG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when = 'midnight')
@@ -31,11 +35,13 @@ def index(request):
 	
 
 def addonListText():
-	sAddonList = '[addonList]\n'
+	sAddonList = '[campaigns]\n'
+	t = datetime.datetime.now()
+	sAddonList += 'timestamp='+str(int(time.mktime(t.timetuple())))+'\n'
 	sAddonList += 'total='+str(Addon.objects.all().count())+'\n'
 	for addon in Addon.objects.all():
 		sAddonList += detailsText(addon)
-	sAddonList += '[/addonList]\n'
+	sAddonList += '[/campaigns]\n'
 	return HttpResponse(sAddonList)
 
 def details(request, addon_id):
@@ -50,23 +56,35 @@ def details(request, addon_id):
 		return render_to_response('addons/details.html', {'addon': addon})
 
 def detailsText(addon):
-	sDesc = '[addon]\n'
-	sDesc += 'id='+str(addon.id)+'\n'
-	sDesc += 'name='+addon.name+'\n'
-	sDesc += 'img='+addon.img+'\n'
-	sDesc += 'version='+addon.ver+'\n'
+	sDesc = '[campaign]\n'
+	sDesc += 'remote_id='+str(addon.id)+'\n' #not used in current game implementation
+	sDesc += 'authors='+",".join(map(lambda a: a.name, addon.authors.all()))+'\n'
+	sDesc += 'dependencies=\n' #TODO do something with dependencies maybe?
+	sDesc += 'description='+addon.desc+'\n'
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
-	sDesc += 'uploads='+str(addon.uploads)+'\n'
-	sDesc += 'file='+str(addon.file)[7:]+'\n' #cut for addons/
-	sDesc += 'type='+str(addon.type)+'\n'
-	sDesc += 'authors='+";".join(map(lambda a: a.name, addon.authors.all()))
-	sDesc += '\n'
-	sDesc += 'desc='+addon.desc+'\n'
-	sDesc += 'timestamp='+str(addon.lastUpdate)+'\n'
-	sDesc += 'rating='+str(addon.get_rating())+'\n'
+	sDesc += 'filename='+str(addon.file)[7:]+'\n' #cut for addons/
+	sDesc += 'icon='+addon.img+'\n'
+	sDesc += 'name='+str(addon.file)[7:]+'\n' #must be same as filename acc. to spec
+	sDesc += 'rating='+str(addon.get_rating())+'\n' #not used in current game implementation
 	sDesc += 'size='+str(addon.file.size)+'\n'
-	sDesc += '[/addon]\n'
+	t = addon.lastUpdate
+	sDesc += 'timestamp='+str(int(time.mktime(t.timetuple())))+'\n'
+	sDesc += 'title='+addon.name+'\n'
+	sDesc += 'translate=false\n' #TODO translate bool field?
+	sDesc += 'uploads='+str(addon.uploads)+'\n'
+	sDesc += 'version='+addon.ver+'\n'
+	sDesc += 'type='+str(addon.type)+'\n' #Warning: see http://wiki.wesnoth.org/PblWML#type for allowed valuesW
+	sDesc += '[/campaign]\n'
+	#TODO [translation]
 	return sDesc
+
+def errorText(error_message):
+	#this returns a WML-parsable string describing an error that should be handled by the game well
+	sDesc = '[error]\n'
+	sDesc = 'message='error_message
+	sDesc = '[/error]'
+	return sDesc
+
 
 def getFile(request, addon_id):
 	logger.info("Download of addon "+addon_id+" requested from "+request.META['REMOTE_ADDR']);
