@@ -81,7 +81,7 @@ def detailsText(addon):
 def errorText(error_message):
 	#this returns a WML-parsable string describing an error that should be handled by the game well
 	sDesc = '[error]\n'
-	sDesc = 'message='error_message
+	sDesc = 'message='+error_message+'\n'
 	sDesc = '[/error]'
 	return sDesc
 
