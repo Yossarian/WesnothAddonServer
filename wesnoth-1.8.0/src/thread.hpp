@@ -22,6 +22,7 @@
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/smart_ptr.hpp>
+#undef WAIT_TIMEOUT
 
 // Threading primitives wrapper for SDL_Thread.
 //
