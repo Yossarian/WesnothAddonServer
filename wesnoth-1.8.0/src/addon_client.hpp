@@ -1,6 +1,8 @@
 #ifndef ADDON_CLIENT_HPP_INCLUDED
 #define ADDON_CLIENT_HPP_INCLUDED
 
+#include "config.hpp"
+
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -23,7 +25,7 @@ HTTP client to access remote addon server
 example usage:
 
 network::addon_client ac;
-ac.set_base_url("http://localhost:8000/addons/");
+ac.set_base_url("http://localhost:8000/addons");
 std::cout<<ac.get_addon_list()<<std::endl;
 std::cout<<ac.get_addon_description(2)<<std::endl;
 
@@ -51,6 +53,7 @@ public:
 	std::string get_addon_description(unsigned int addon_id);
 
 	std::string get_addon_list(/* TODO: filters? */);
+	config get_addon_list_cfg();
 
 	//std::vector<char> get_addon_file(unsigned int addon_id); not yet implemented
 

@@ -1,4 +1,5 @@
 #include "addon_client.hpp"
+#include "serialization/parser.hpp"
 #include <sstream>
 
 using namespace network;
@@ -89,4 +90,12 @@ size_t addon_client::default_recv_callback
 	//if return size differs from total size, 
 	//an error is returned by curl_easy_perform
 	return size*nmemb;	
+}
+
+config addon_client::get_addon_list_cfg()
+{
+	std::string list = get_addon_list();
+	config cfg;
+	read(cfg, list);
+	return cfg;
 }
