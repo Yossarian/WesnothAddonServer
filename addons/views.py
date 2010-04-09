@@ -58,7 +58,7 @@ def details(request, addon_id):
 def detailsText(addon):
 	sDesc = '[campaign]\n'
 	sDesc += 'remote_id='+str(addon.id)+'\n' #not used in current game implementation
-	sDesc += 'authors='+",".join(map(lambda a: a.name, addon.authors.all()))+'\n'
+	sDesc += 'author='+", ".join(map(lambda a: a.name, addon.authors.all()))+'\n'
 	sDesc += 'dependencies=\n' #TODO do something with dependencies maybe?
 	sDesc += 'description='+addon.desc+'\n'
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
