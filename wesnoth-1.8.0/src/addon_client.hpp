@@ -46,8 +46,7 @@ public:
 	addon_client(void);
 	~addon_client(void);
 
-	//include 'http://' in base_url, ex. http://wesnoth.org/addons
-	//no trailing slash!
+	//include 'http://' in base_url, ex. http://wesnoth.org/addons/
 	void set_base_url(std::string base_url);
 
 	std::string get_addon_description(unsigned int addon_id);

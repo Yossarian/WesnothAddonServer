@@ -968,11 +968,13 @@ namespace {
 
 		try {
 			const network::manager net_manager;
-			const network::connection sock =
+			network::connection sock; //left for compilability ;p
+			//Old code commented out
+			/*const network::connection sock =
 				dialogs::network_connect_dialog(disp, _("Connecting to add-ons server..."),
 				                                remote_host, remote_port);
 			//Old code commented out
-			/*if(!sock) {
+			if(!sock) {
 				gui2::show_error_message(disp.video(), _("Could not connect to host."));
 				preferences::set_campaign_server(old_host);
 				return;
@@ -987,16 +989,16 @@ namespace {
 			}
 
 			if (config const &error = cfg.child("error")) {
-				gui2::show_error_message(disp.video(), error["message"]);
+				gui2::show_error_message(disp.video(), error["message"]);oh
 				return;
 			}*/
-
 			
 			//New addon client code goes here for testing
 			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons");
+			ac.set_base_url("http://localhost:8000/addons/");
+			std::cerr << ac.get_addon_list();
 			config cfg = ac.get_addon_list_cfg();
-			
+			std::cerr << "x " <<cfg<<" y";
 			//Old code again
 
 			config const &addons_tree = cfg.child("campaigns");

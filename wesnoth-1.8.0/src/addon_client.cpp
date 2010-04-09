@@ -44,6 +44,7 @@ void addon_client::flush()
 
 void addon_client::set_base_url(std::string base_url)
 {
+	//TODO trailing slash bulletproofing
 	base_url_ = base_url;
 }
 
