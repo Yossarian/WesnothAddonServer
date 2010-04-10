@@ -28,6 +28,9 @@ class CampaignClient:
         self.args = None
         self.cs = None
         self.verbose = False
+        self.canceled = False
+        self.error = False
+        self.sock = None
 
         if address != None:
             s = address.split(":")
@@ -37,8 +40,6 @@ class CampaignClient:
                 self.host = s[0]
                 self.port = self.portmap[0][0]
             self.port = int(self.port)
-            self.canceled = False
-            self.error = False
             addr = socket.getaddrinfo(self.host, self.port, socket.AF_INET,
                 socket.SOCK_STREAM, socket.IPPROTO_TCP)[0]
             sys.stderr.write("Opening socket to %s" % address)
@@ -65,16 +66,17 @@ class CampaignClient:
         self.canceled = True
 
     def __del__(self):
-        if self.canceled:
-            sys.stderr.write("Canceled socket.\n")
-        elif self.error:
-            sys.stderr.write("Unexpected disconnection.\n")
-        else:
-            sys.stderr.write("Closing socket.\n")
-        try:
-            self.sock.shutdown(2)
-        except socket.error:
-            pass # Well, what can we do?
+        #if self.canceled:
+        #    sys.stderr.write("Canceled socket.\n")
+        #elif self.error:
+        #    sys.stderr.write("Unexpected disconnection.\n")
+        #else:
+        #    sys.stderr.write("Closing socket.\n")
+        if self.sock:
+            try:
+                self.sock.shutdown(2)
+            except socket.error:
+                pass # Well, what can we do?
 
 
     def make_packet(self, doc):

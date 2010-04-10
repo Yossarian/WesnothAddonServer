@@ -2,12 +2,15 @@ from django.shortcuts import render_to_response, redirect
 from django.http import HttpResponse, HttpResponseServerError
 from addons.models import *
 from django.core.exceptions import ObjectDoesNotExist
-import re
 from django.utils.datetime_safe import datetime
 from django.contrib.auth import authenticate
-
+from settings import MEDIA_ROOT
 import logging   
 import logging.handlers
+import re, random, shutil, os.path
+from subprocess import Popen
+from wesnoth.campaignserver_client import CampaignClient
+
 logger = logging.getLogger('project_logger')
 logger.setLevel(logging.INFO)
 
@@ -100,7 +103,6 @@ def rate(request, addon_id):
 
 
 def publish(request):
-	# broken for now ;)
 	login = username=request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
 	
@@ -156,18 +158,35 @@ def publish(request):
 			if len(addon.authors.filter(name=login)) == 0:
 				return error_response('Author error', ['This user is not one of authors'])
 			addon.uploads += 1
-			addon.file.delete()
+			if addon.file_tbz:
+				addon.file_tbz.delete()
+			if addon.file_wml:
+				addon.file_wml.delete()
 		except ObjectDoesNotExist:
 			addon = Addon()
 			addon.name = keys_vals['title']
 			addon.uploads = 1
 			addon.downloads = 0
-		
+
+		file.name = addon.name + '.wml'		
+
+		tmp_dir_name = "%016x" % random.getrandbits(128)
+		cs = CampaignClient()
+				
+		file_data = file.read()
+		decoded_wml = cs.decode(file_data)
+
+		cs.unpackdir(decoded_wml, tmp_dir_name, verbose = False)
+		tarname = os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".tar.bz2"
+		Popen(["tar", "cjf", tarname, "-C", tmp_dir_name, '.']).wait()
+		shutil.rmtree(tmp_dir_name, True)
+		addon.file_tbz = "addons/" + addon.name + ".tar.bz2"
+
 		addon.ver = keys_vals['version']
 		addon.img = keys_vals['icon']
 		addon.desc = keys_vals['description']
 		addon.type = addon_type
-		addon.file = file
+		addon.file_wml = file
 		addon.lastUpdate = datetime.now()
 		addon.save()
 
