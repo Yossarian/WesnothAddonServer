@@ -25,7 +25,7 @@ def index(request):
 		addon_list = Addon.objects.all().order_by('-name')
 		for addon in addon_list:
 			try:
-				addon.file_size = addon.file.size
+				addon.file_size = addon.file_tbz.size
 			except (IOError, ValueError):
 				addon.file_size = False
 		return render_to_response('addons/addonList.html', {'addon_list': addon_list})
@@ -42,7 +42,7 @@ def addonListText():
 def details(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
 	try:
-		addon.file_size = addon.file.size
+		addon.file_size = addon.file_tbz.size
 	except (IOError, NameError, ValueError):
 		addon.file_size = False
 	if 'simple_iface' in request.GET:
@@ -58,14 +58,14 @@ def detailsText(addon):
 	sDesc += 'version='+addon.ver+'\n'
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
 	sDesc += 'uploads='+str(addon.uploads)+'\n'
-	sDesc += 'file='+str(addon.file)[7:]+'\n' #cut for addons/
+	sDesc += 'file='+str(addon.file_wml)[7:]+'\n' #cut for addons/
 	sDesc += 'type='+str(addon.type)+'\n'
 	sDesc += 'authors='+";".join(map(lambda a: a.name, addon.authors.all()))
 	sDesc += '\n'
 	sDesc += 'desc='+addon.desc+'\n'
 	sDesc += 'timestamp='+str(addon.lastUpdate)+'\n'
 	sDesc += 'rating='+str(addon.get_rating())+'\n'
-	sDesc += 'size='+str(addon.file.size)+'\n'
+	sDesc += 'size='+str(addon.file_wml.size)+'\n'
 	sDesc += '[/addon]\n'
 	return sDesc
 
@@ -74,7 +74,10 @@ def getFile(request, addon_id):
 	addon = Addon.objects.get(id=addon_id)
 	addon.downloads = addon.downloads + 1
 	addon.save()
-	return redirect(addon.file.url)
+	if 'wml' in request.GET:
+		return redirect(addon.file_wml.url)
+	else:
+		return redirect(addon.file_tbz.url)
 
 def rate(request, addon_id):
 	try:
@@ -97,6 +100,7 @@ def rate(request, addon_id):
 
 
 def publish(request):
+	# broken for now ;)
 	login = username=request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
 	

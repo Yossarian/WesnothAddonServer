@@ -54,7 +54,7 @@ var zzfg = new domFunction(function() {
 	<td><span style="display:none">{{addon.downloads|stringformat:"09d"}}</span>{{addon.downloads}} downloads <br/> {{addon.uploads}} uploads</td>
 
 	{% if addon.file_size %}
-		<td><span style="display:none">{{addon.file.size|stringformat:"09d"}}</span>{{addon.file.size|filesizeformat}} <br />
+		<td><span style="display:none">{{addon.file_tbz.size|stringformat:"09d"}}</span>{{addon.file_tbz.size|filesizeformat}} <br />
 		<b><a href="{% url addons.views.getFile addon.id %}">Download</a></b>
 		</td>
 	{% else %}
