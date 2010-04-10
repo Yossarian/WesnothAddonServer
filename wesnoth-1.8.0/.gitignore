@@ -36,3 +36,4 @@ src/Makefile
 src/cmake_install.cmake
 src/config.h
 uninstall.cmake
+lib*.a
