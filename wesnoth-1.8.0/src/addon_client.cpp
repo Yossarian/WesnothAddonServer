@@ -100,3 +100,21 @@ config addon_client::get_addon_list_cfg()
 	read(cfg, list);
 	return cfg;
 }
+
+config addon_client::get_addon_cfg(unsigned int addon_id)
+{
+	std::ostringstream address;
+	address << base_url_ << "download/" << addon_id <<"/?simple_iface";
+
+	//setup data to pass to callback
+	std::string buffer;
+	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
+
+	//setup actual url
+	curl_easy_setopt(handle_, CURLOPT_URL, address.str().c_str());
+	flush();
+
+	config cfg;
+	read(cfg, buffer);
+	return cfg;
+}
