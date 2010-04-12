@@ -103,8 +103,15 @@ config addon_client::get_addon_list_cfg()
 
 config addon_client::get_addon_cfg(unsigned int addon_id)
 {
+	std::ostringstream id;
+	id << addon_id;
+	return get_addon_cfg(id.str());
+}
+
+config addon_client::get_addon_cfg(std::string addon_name)
+{
 	std::ostringstream address;
-	address << base_url_ << "download/" << addon_id <<"/?simple_iface";
+	address << base_url_ << "download/" << addon_name <<"/?simple_iface";
 
 	//setup data to pass to callback
 	std::string buffer;
