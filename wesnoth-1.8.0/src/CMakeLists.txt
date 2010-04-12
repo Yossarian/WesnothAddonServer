@@ -11,6 +11,7 @@ include_directories( ${PANGOCAIRO_INCLUDE_DIRS} )
 include_directories( ${FONTCONFIG_INCLUDE_DIRS} )
 include_directories( ${GETTEXT_INCLUDE_DIR} )
 include_directories( ${LIBDBUS_INCLUDE_DIRS} )
+include_directories( ${CURL_INCLUDE_DIRS} )
 
 #optional dependencies
 if(SDLIMAGE_INCLUDE_DIR)
@@ -60,6 +61,7 @@ set( game-external-libs
     ${FONTCONFIG_LIBRARIES}
     ${LUA_LIBRARIES}
     ${LIBDBUS_LIBRARIES}
+    ${CURL_LIBRARIES}
 )
 
 set( server-external-libs
@@ -161,6 +163,7 @@ set(wesnoth-main_SRC
     about.cpp
     actions.cpp
     addon_checks.cpp
+    addon_client.cpp
     addon_management.cpp
     ai/actions.cpp
     ai/composite/ai.cpp

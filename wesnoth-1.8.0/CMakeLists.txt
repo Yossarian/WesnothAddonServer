@@ -191,6 +191,7 @@ endif(ENABLE_TESTS)
 if(ENABLE_GAME)
 	find_package( Lua51 REQUIRED)
 	find_package( PkgConfig REQUIRED )
+	find_package( CURL REQUIRED )
 
 	pkg_check_modules( PANGOCAIRO REQUIRED pangocairo>=1.14.8 )
 	if(NOT MSVC)
