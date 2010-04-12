@@ -93,8 +93,14 @@ def errorText(error_message):
 
 
 def getFile(request, addon_id):
-	logger.info("Download of addon "+addon_id+" requested from "+request.META['REMOTE_ADDR']);
-	addon = Addon.objects.get(id=addon_id)
+	logger.info("Download of addon "+str(addon_id)+" requested from "+request.META['REMOTE_ADDR']);
+	try:
+		addon = Addon.objects.get(id=addon_id)
+	except (Addon.DoesNotExist, ValueError):
+		try:
+			addon = Addon.objects.get(name=addon_id)
+		except Addon.DoesNotExist:
+			raise Http404
 	addon.downloads = addon.downloads + 1
 	addon.save()
 	if 'wml' in request.GET:
