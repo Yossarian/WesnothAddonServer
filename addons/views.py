@@ -4,6 +4,7 @@ from addons.models import *
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.datetime_safe import datetime
 from django.contrib.auth import authenticate
+from django.http import Http404
 from settings import MEDIA_ROOT
 import logging   
 import logging.handlers
@@ -47,7 +48,10 @@ def addonListText():
 	return HttpResponse(sAddonList)
 
 def details(request, addon_id):
-	addon = Addon.objects.get(id=addon_id)
+	try:
+		addon = Addon.objects.get(id=addon_id)
+	except Addon.DoesNotExist:
+		raise Http404
 	try:
 		addon.file_size = addon.file_tbz.size
 	except (IOError, NameError, ValueError):

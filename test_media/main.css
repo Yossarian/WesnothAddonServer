@@ -51,7 +51,7 @@
 body {
   margin: 0;
   padding: 0;
-  background: #FFFBF0;
+  background: #FCFCFC;
   color: #111;
   font: 0.88em sans-serif;
 }
@@ -314,7 +314,7 @@ blockquote {
 #nav a {
   /*color: #A74;*/
   /*color: #DBB672;*/
-  color: #B48648;
+  color: #989898;
   font-family: "Trebuchet MS", sans-serif;
   font-weight: bold;
   text-decoration: none;
