@@ -14,10 +14,6 @@ from wesnoth.campaignserver_client import CampaignClient
 logger = logging.getLogger('project_logger')
 logger.setLevel(logging.INFO)
 
-import time
-import datetime
-
-
 LOG_FILENAME = 'log.txt'
 LOG_MSG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 handler = logging.handlers.TimedRotatingFileHandler(LOG_FILENAME, when = 'midnight')
