@@ -11,6 +11,8 @@ import re, random, shutil, os.path
 from subprocess import Popen
 from wesnoth.campaignserver_client import CampaignClient
 
+import time
+
 logger = logging.getLogger('project_logger')
 logger.setLevel(logging.INFO)
 
@@ -36,7 +38,7 @@ def index(request):
 
 def addonListText():
 	sAddonList = '[campaigns]\n'
-	t = datetime.datetime.now()
+	t = datetime.now()
 	sAddonList += 'timestamp='+str(int(time.mktime(t.timetuple())))+'\n'
 	sAddonList += 'total='+str(Addon.objects.all().count())+'\n'
 	for addon in Addon.objects.all():
