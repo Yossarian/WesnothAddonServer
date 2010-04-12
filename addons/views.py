@@ -70,7 +70,7 @@ def detailsText(addon):
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
 	sDesc += 'filename='+str(addon.file_wml)[7:]+'\n' #cut for addons/
 	sDesc += 'icon='+addon.img+'\n'
-	sDesc += 'name='+str(addon.file_wml)[7:]+'\n' #must be same as filename acc. to spec
+	sDesc += 'name='+addon.name+'\n'
 	sDesc += 'rating='+str(addon.get_rating())+'\n' #not used in current game implementation
 	sDesc += 'size='+str(addon.file_wml.size)+'\n'
 	t = addon.lastUpdate
