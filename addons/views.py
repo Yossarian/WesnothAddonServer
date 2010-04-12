@@ -66,11 +66,11 @@ def detailsText(addon):
 	sDesc += 'dependencies=\n' #TODO do something with dependencies maybe?
 	sDesc += 'description='+addon.desc+'\n'
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
-	sDesc += 'filename='+str(addon.file)[7:]+'\n' #cut for addons/
+	sDesc += 'filename='+str(addon.file_wml)[7:]+'\n' #cut for addons/
 	sDesc += 'icon='+addon.img+'\n'
-	sDesc += 'name='+str(addon.file)[7:]+'\n' #must be same as filename acc. to spec
+	sDesc += 'name='+str(addon.file_wml)[7:]+'\n' #must be same as filename acc. to spec
 	sDesc += 'rating='+str(addon.get_rating())+'\n' #not used in current game implementation
-	sDesc += 'size='+str(addon.file.size)+'\n'
+	sDesc += 'size='+str(addon.file_wml.size)+'\n'
 	t = addon.lastUpdate
 	sDesc += 'timestamp='+str(int(time.mktime(t.timetuple())))+'\n'
 	sDesc += 'title='+addon.name+'\n'
