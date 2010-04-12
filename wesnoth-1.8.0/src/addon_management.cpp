@@ -35,6 +35,7 @@
 #include "version.hpp"
 #include "wml_separators.hpp"
 #include "formula_string_utils.hpp"
+#include "addon_client.hpp"
 
 static lg::log_domain log_config("config");
 #define ERR_CFG LOG_STREAM(err , log_config)
@@ -967,9 +968,12 @@ namespace {
 
 		try {
 			const network::manager net_manager;
-			const network::connection sock =
+			network::connection sock; //left for compilability ;p
+			//Old code commented out
+			/*const network::connection sock =
 				dialogs::network_connect_dialog(disp, _("Connecting to add-ons server..."),
 				                                remote_host, remote_port);
+			//Old code commented out
 			if(!sock) {
 				gui2::show_error_message(disp.video(), _("Could not connect to host."));
 				preferences::set_campaign_server(old_host);
@@ -985,9 +989,17 @@ namespace {
 			}
 
 			if (config const &error = cfg.child("error")) {
-				gui2::show_error_message(disp.video(), error["message"]);
+				gui2::show_error_message(disp.video(), error["message"]);oh
 				return;
-			}
+			}*/
+			
+			//New addon client code goes here for testing
+			network::addon_client ac;
+			ac.set_base_url("http://localhost:8000/addons/");
+			std::cerr << ac.get_addon_list();
+			config cfg = ac.get_addon_list_cfg();
+			std::cerr << "x " <<cfg<<" y";
+			//Old code again
 
 			config const &addons_tree = cfg.child("campaigns");
 			if (!addons_tree) {

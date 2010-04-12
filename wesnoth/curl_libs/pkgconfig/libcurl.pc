@@ -1,0 +1,12 @@
+prefix=c:/wesnoth
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+pango_module_version=1.6.0
+
+Name: libcurl
+Version: 7.18
+Description: libcurl
+Libs: -lcurl
+Cflags: -I${includedir}
