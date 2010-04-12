@@ -28,6 +28,8 @@ addon_client::addon_client(void)
 
 	//do not include http  header in output
 	curl_easy_setopt(handle_, CURLOPT_HEADER, 0);
+
+	curl_easy_setopt(handle_, CURLOPT_FOLLOWLOCATION, TRUE);
 }
 
 addon_client::~addon_client(void)
@@ -98,5 +100,29 @@ config addon_client::get_addon_list_cfg()
 	std::string list = get_addon_list();
 	config cfg;
 	read(cfg, list);
+	return cfg;
+}
+
+config addon_client::get_addon_cfg(unsigned int addon_id)
+{
+	std::ostringstream id;
+	id << addon_id;
+	return get_addon_cfg(id.str());
+}
+
+config addon_client::get_addon_cfg(std::string addon_name)
+{
+	std::ostringstream address;
+	address << base_url_ << "download/" << addon_name <<"/?wml";
+
+	//setup data to pass to callback
+	std::string buffer;
+	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
+
+	//setup actual url
+	curl_easy_setopt(handle_, CURLOPT_URL, address.str().c_str());
+	flush();
+	config cfg;
+	read(cfg, buffer);
 	return cfg;
 }

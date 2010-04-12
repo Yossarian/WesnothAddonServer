@@ -2,6 +2,7 @@ import gzip, zlib, StringIO
 import socket, struct, glob, sys, shutil, threading, os, fnmatch
 import wesnoth.wmldata as wmldata
 import wesnoth.wmlparser as wmlparser
+import urllib2
 
 # See the following files (among others):
 # src/addon_management.cpp
@@ -31,7 +32,9 @@ class CampaignClient:
         self.canceled = False
         self.error = False
         self.sock = None
-
+        self.address = "127.0.0.1:8000"
+        
+        """
         if address != None:
             s = address.split(":")
             if len(s) == 2:
@@ -58,6 +61,7 @@ class CampaignClient:
                 self.error = True
             sys.stderr.write("Connected as %d.\n" % struct.unpack(
                 "!l", connection_num))
+        """
 
     def async_cancel(self):
         """
@@ -236,10 +240,11 @@ class CampaignClient:
         """
         if self.error:
             return None
-        request = wmldata.DataSub("request_campaign_list")
-        self.send_packet(self.make_packet(request))
 
-        return self.decode(self.read_packet())
+        req = urllib2.Request('http://' + self.address + '/addons/?simple_iface')
+        response = urllib2.urlopen(req)
+        data = response.read()
+        return self.decode(data)
 
     def validate_campaign(self, name, passphrase):
         """
@@ -275,27 +280,22 @@ class CampaignClient:
         self.send_packet(self.make_packet(request))
         return self.decode(self.read_packet())
 
-    def get_campaign_raw(self, name):
+    def get_campaign_raw(self, id):
         """
         Downloads the named campaign and returns it as a raw binary WML packet.
         """
-        request = wmldata.DataSub("request_campaign")
-        request.insert(wmldata.DataText("name", name))
-        self.send_packet(self.make_packet(request))
-        raw_packet = self.read_packet()
-
-        if self.canceled:
-            return None
+        req = urllib2.Request('http://' + self.address + '/addons/download/' + id + '/?wml')
+        response = urllib2.urlopen(req)
+        raw_packet = response.read()
 
         return raw_packet
 
-    def get_campaign(self, name):
+    def get_campaign(self, id):
         """
         Downloads the named campaign and returns it as a WML object.
         """
 
-        packet = self.get_campaign_raw(name)
-
+        packet = self.get_campaign_raw(id)
         if packet:
             return self.decode(packet)
 
@@ -368,15 +368,15 @@ class CampaignClient:
 
         return self.decode(self.read_packet())
 
-    def get_campaign_raw_async(self, name):
+    def get_campaign_raw_async(self, id):
         """
         This is like get_campaign_raw, but returns immediately, 
         doing server communications in a background thread.
         """
         class MyThread(threading.Thread):
-            def __init__(self, name, client):
-                threading.Thread.__init__( self, name=name )
-                self.name = name
+            def __init__(self, id, client):
+                threading.Thread.__init__( self, name=str(id) )
+                self.id = id
                 self.cs = client
 
                 self.event = threading.Event()
@@ -392,7 +392,7 @@ class CampaignClient:
                 self.event.set()
                 self.cs.async_cancel()
 
-        mythread = MyThread( name, self )
+        mythread = MyThread( id, self )
         mythread.start()
 
         return mythread

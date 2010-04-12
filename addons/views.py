@@ -70,7 +70,7 @@ def detailsText(addon):
 	sDesc += 'downloads='+str(addon.downloads)+'\n'
 	sDesc += 'filename='+str(addon.file_wml)[7:]+'\n' #cut for addons/
 	sDesc += 'icon='+addon.img+'\n'
-	sDesc += 'name='+str(addon.file_wml)[7:]+'\n' #must be same as filename acc. to spec
+	sDesc += 'name='+addon.name+'\n'
 	sDesc += 'rating='+str(addon.get_rating())+'\n' #not used in current game implementation
 	sDesc += 'size='+str(addon.file_wml.size)+'\n'
 	t = addon.lastUpdate
@@ -93,8 +93,14 @@ def errorText(error_message):
 
 
 def getFile(request, addon_id):
-	logger.info("Download of addon "+addon_id+" requested from "+request.META['REMOTE_ADDR']);
-	addon = Addon.objects.get(id=addon_id)
+	logger.info("Download of addon "+str(addon_id)+" requested from "+request.META['REMOTE_ADDR']);
+	try:
+		addon = Addon.objects.get(id=addon_id)
+	except (Addon.DoesNotExist, ValueError):
+		try:
+			addon = Addon.objects.get(name=addon_id)
+		except Addon.DoesNotExist:
+			raise Http404
 	addon.downloads = addon.downloads + 1
 	addon.save()
 	if 'wml' in request.GET:

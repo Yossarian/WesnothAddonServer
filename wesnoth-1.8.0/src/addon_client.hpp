@@ -53,6 +53,8 @@ public:
 
 	std::string get_addon_list(/* TODO: filters? */);
 	config get_addon_list_cfg();
+	config get_addon_cfg(unsigned int addon_id);
+	config get_addon_cfg(std::string addon_name);
 
 	//std::vector<char> get_addon_file(unsigned int addon_id); not yet implemented
 
