@@ -636,8 +636,8 @@ namespace {
 
 		utils::string_map syms;
 		syms["addon_title"] = addon_title;
-		const std::string& download_dlg_title =
-			utils::interpolate_variables_into_string(_("Downloading add-on: $addon_title|..."), &syms);
+		//const std::string& download_dlg_title =
+		//	utils::interpolate_variables_into_string(_("Downloading add-on: $addon_title|..."), &syms);
 
 		//Old code 
 		// WML structure where the add-on archive, or any error messages, are stored.

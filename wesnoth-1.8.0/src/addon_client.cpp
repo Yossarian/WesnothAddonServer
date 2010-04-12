@@ -29,7 +29,7 @@ addon_client::addon_client(void)
 	//do not include http  header in output
 	curl_easy_setopt(handle_, CURLOPT_HEADER, 0);
 
-	curl_easy_setopt(handle_, CURLOPT_FOLLOWLOCATION, TRUE);
+	curl_easy_setopt(handle_, CURLOPT_FOLLOWLOCATION, true);
 }
 
 addon_client::~addon_client(void)
