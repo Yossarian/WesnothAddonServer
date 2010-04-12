@@ -628,21 +628,28 @@ namespace {
 		std::vector<std::string> dependencies = utils::split(selected_campaign["dependencies"]);
 		if (!addon_dependencies_met(disp, dependencies, addon_title)) return false;
 		// Proceed to download and install
-		config request;
+
+		//Old code 
+		/*config request;
 		request.add_child("request_campaign")["name"] = addon_id;
-		network::send_data(request, sock, true);
+		network::send_data(request, sock, true);*/
 
 		utils::string_map syms;
 		syms["addon_title"] = addon_title;
 		const std::string& download_dlg_title =
 			utils::interpolate_variables_into_string(_("Downloading add-on: $addon_title|..."), &syms);
 
+		//Old code 
 		// WML structure where the add-on archive, or any error messages, are stored.
-		config cfg;
+		/*config cfg;
 		network::connection res = dialogs::network_receive_dialog(disp, download_dlg_title, cfg, sock);
 		if(!res) {
 			return false;
-		}
+		}*/
+
+		network::addon_client ac;
+		ac.set_base_url("http://localhost:8000/addons/");
+		config cfg = ac.get_addon_cfg(addon_id);
 
 		if (config const &dlerror = cfg.child("error")) {
 			gui2::show_error_message(disp.video(), dlerror["message"]);
@@ -996,9 +1003,7 @@ namespace {
 			//New addon client code goes here for testing
 			network::addon_client ac;
 			ac.set_base_url("http://localhost:8000/addons/");
-			std::cerr << ac.get_addon_list();
 			config cfg = ac.get_addon_list_cfg();
-			std::cerr << "x " <<cfg<<" y";
 			//Old code again
 
 			config const &addons_tree = cfg.child("campaigns");

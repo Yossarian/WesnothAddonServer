@@ -28,6 +28,8 @@ addon_client::addon_client(void)
 
 	//do not include http  header in output
 	curl_easy_setopt(handle_, CURLOPT_HEADER, 0);
+
+	curl_easy_setopt(handle_, CURLOPT_FOLLOWLOCATION, TRUE);
 }
 
 addon_client::~addon_client(void)
@@ -111,7 +113,7 @@ config addon_client::get_addon_cfg(unsigned int addon_id)
 config addon_client::get_addon_cfg(std::string addon_name)
 {
 	std::ostringstream address;
-	address << base_url_ << "download/" << addon_name <<"/?simple_iface";
+	address << base_url_ << "download/" << addon_name <<"/?wml";
 
 	//setup data to pass to callback
 	std::string buffer;
@@ -120,7 +122,6 @@ config addon_client::get_addon_cfg(std::string addon_name)
 	//setup actual url
 	curl_easy_setopt(handle_, CURLOPT_URL, address.str().c_str());
 	flush();
-
 	config cfg;
 	read(cfg, buffer);
 	return cfg;
