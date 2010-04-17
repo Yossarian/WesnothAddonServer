@@ -11,6 +11,7 @@ add-ons.
 
 import sys, os.path, re, time, glob, shutil
 from subprocess import Popen
+sys.path.append("..") #TODO FIXME assume wesnoth package in PYTHONPATH?
 import wesnoth.wmldata as wmldata
 import wesnoth.wmlparser as wmlparser
 from wesnoth.campaignserver_client import CampaignClient
