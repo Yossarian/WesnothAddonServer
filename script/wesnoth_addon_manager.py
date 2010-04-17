@@ -11,6 +11,7 @@ add-ons.
 
 import sys, os.path, re, time, glob, shutil
 from subprocess import Popen
+sys.path.append("..") #TODO FIXME assume wesnoth package in PYTHONPATH?
 import wesnoth.wmldata as wmldata
 import wesnoth.wmlparser as wmlparser
 from wesnoth.campaignserver_client import CampaignClient
@@ -108,8 +109,9 @@ if __name__ == "__main__":
     if not ":" in address:
         address += ":" + str(port)
 
-    def get(name, version, uploads, cdir):
-        mythread = cs.get_campaign_raw_async(name)
+    def get(id, name, version, uploads, cdir):
+	print "geeet"
+        mythread = cs.get_campaign_raw_async(id)
 
         pcounter = 0
         while not mythread.event.isSet():
@@ -230,6 +232,7 @@ if __name__ == "__main__":
                 type = campaign.get_text_val("type", "")
                 version = campaign.get_text_val("version", "")
                 uploads = campaign.get_text_val("uploads", "")
+		id = campaign.get_text_val("remote_id", "")
                 if re.escape(options.download).replace("\\_", "_") == options.download:
                     if name == options.download:
                         fetchlist.append((name, version, uploads))
@@ -237,13 +240,16 @@ if __name__ == "__main__":
                     if re.search(options.download, name):
                         fetchlist.append((name, version, uploads))
 
+	if len(fetchlist) == 0:
+		print "No addon found"
+
         for name, version, uploads in fetchlist:
             info = os.path.join(options.campaigns_dir, name, "_info.cfg")
             local_uploads, local_version = get_info(info)
             if uploads != local_uploads:
                 # The uploads > local_uploads likely means a server reset
                 if version != local_version or uploads > local_uploads:
-                    get(name, version, uploads, options.campaigns_dir)
+                    get(id, name, version, uploads, options.campaigns_dir)
                 else:
                     print "Not downloading", name, \
                         "as the version already is", local_version, \

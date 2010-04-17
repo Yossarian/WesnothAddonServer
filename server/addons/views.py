@@ -8,8 +8,9 @@ from django.http import Http404
 from settings import MEDIA_ROOT
 import logging   
 import logging.handlers
-import re, random, shutil, os.path
+import re, random, shutil, os.path, sys
 from subprocess import Popen
+sys.path.append("..") #TODO FIXME assume wesnoth package in PYTHONPATH?
 from wesnoth.campaignserver_client import CampaignClient
 
 import time
