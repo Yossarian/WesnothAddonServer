@@ -1,3 +1,10 @@
+Podkatalogi zawierają:
+server/ -- faktyczna aplikacja serwera dodatków
+game/ -- interfejs gry (zmodyfikowana wersja Wesnoth 1.8)
+script/ -- interfejst skryptu (zmodyfikowana wersja z Wesnoth 1.8)
+wesnoth/ -- wspólne dla skryptu i serwera pakiety pythonowe
+test_data/ -- dane przykładowe (testowe)
+
 Aby uruchomić prototyp należy:
  - Zainstalować implementację języka Python w wersji 2.6 ( http://www.python.org/download/ )
  - Zainstalować platformę (framework) Django w wersji 1.1.1 ( http://www.djangoproject.com/download/ )
