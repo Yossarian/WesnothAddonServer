@@ -25,6 +25,14 @@ class Addon(models.Model):
 	authors = models.ManyToManyField(Author)
 	desc = models.TextField()
 	lastUpdate = models.DateTimeField()
+	
+	@staticmethod
+	def get_addon(id_or_name):
+		try:
+			addon = Addon.objects.get(id=id_or_name)
+		except (Addon.DoesNotExist, ValueError):
+			addon = Addon.objects.get(name=id_or_name)
+		return addon
 
 	def get_rating(self):
 		rs = self.rating_set.all()
