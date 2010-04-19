@@ -179,5 +179,12 @@ void addon_client::publish_addon(const config& addon, std::string login, std::st
 	std::ostringstream address;
 	address <<base_url_<< "publish/";
 	std::string response = get_response(address.str(), args, true);
+
+	//error handling
+	config response_cfg;
+	read(response_cfg, response);
+	if (config const &error = response_cfg.child("error")) {
+		throw addon_client_error(error["message"]);
+	}
 }
 //void addon_client::delete_remote_addon(std::string addon_name, std::string login, std::string pass);
