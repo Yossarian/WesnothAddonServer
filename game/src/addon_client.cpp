@@ -69,7 +69,8 @@ std::string addon_client::get_response(std::string url,
 	//convert arguments to an encoded string like key=value?other+key=1
 	std::ostringstream params;
 	for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++)
-		params << '?' << url_encode(i->first) << '=' << url_encode(i->second);
+		params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
+
 
 	if(post)
 	{
@@ -79,7 +80,7 @@ std::string addon_client::get_response(std::string url,
 	else //GET
 	{
 		//just slap the params to the url
-		url += params.str();
+		url += std::string("?") + params.str();
 	}
 
 	//setup actual url
@@ -195,13 +196,13 @@ void addon_client::delete_remote_addon(std::string addon_name, std::string login
 	args["password"] = pass;
 
 	std::ostringstream address;
-	address <<base_url_<< "remove/" << url_encode(addon_name);
+	address <<base_url_<< "remove/" << url_encode(addon_name) <<"/";
 	std::string response = get_response(address.str(), args, true);
 
 	//error handling
-	config response_cfg;
+	/*config response_cfg;
 	read(response_cfg, response);
 	if (config const &error = response_cfg.child("error")) {
 		throw addon_client_error(error["message"]);
-	}
+	}*/
 }
