@@ -50,8 +50,7 @@ std::string addon_client::url_encode(std::string raw_string) const
 		//proper but typically only special chars are escaped in such a way
 		if ( (48 <= c && c <= 57) ||//0-9
 			(65 <= c && c <= 90) ||//abc...xyz
-			(97 <= c && c <= 122) || //ABC...XYZ
-			(c=='~' || c=='!' || c=='*' || c=='(' || c==')' || c=='\''))
+			(97 <= c && c <= 122)) //ABC...XYZ
 		{
 			encoded << c;
 		}
