@@ -96,12 +96,9 @@ def errorText(error_message):
 def getFile(request, addon_id):
 	logger.info("Download of addon "+str(addon_id)+" requested from "+request.META['REMOTE_ADDR']);
 	try:
-		addon = Addon.objects.get(id=addon_id)
-	except (Addon.DoesNotExist, ValueError):
-		try:
-			addon = Addon.objects.get(name=addon_id)
-		except Addon.DoesNotExist:
-			raise Http404
+		addon = Addon.get_addon(addon_id)
+	except (Addon.DoesNotExist):
+		raise Http404
 	addon.downloads = addon.downloads + 1
 	addon.save()
 	if 'wml' in request.GET:
@@ -246,11 +243,13 @@ def removeForm(request, addon_id):
 	return render_to_response('addons/confirmRemove.html', {'addon_id':addon_id,'addon': addon})
 	
 def remove(request, addon_id):
-	addon = Addon.objects.get(id=addon_id)
 	login = request.POST['login']
-	password = request.POST['password']
-	errors_credentials = not (login==password and login!='')
-	errors_permissions = not (login=='master' and password=='master')
+	user = authenticate(username=login, password=request.POST['password'])
+
+	addon = Addon.get_addon(id=addon_id)
+
+	errors_credentials = ( user == None )
+	errors_permissions = ( len(addon.authors.filter(name=login)) == 0 )
 	
 	if not (errors_permissions or errors_credentials):
 		addon.delete()
