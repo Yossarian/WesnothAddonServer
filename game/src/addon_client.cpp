@@ -57,7 +57,7 @@ std::string addon_client::url_encode(std::string raw_string) const
 		}
 		else
 		{
-			encoded << '%' << std::hex << c;
+			encoded << '%' << std::hex << int(c);
 		}
 	}
 	return encoded.str();
@@ -119,9 +119,11 @@ std::string addon_client::get_addon_description(unsigned int addon_id)
 std::string addon_client::get_addon_list()
 {
 	std::ostringstream address;
-	address <<base_url_<<"?simple_iface";
+	address <<base_url_;//<<"?simple_iface";
+	string_map_t args;
+	args["simple_iface"] = "1";
 
-	return get_response(address.str());;
+	return get_response(address.str(), args);;
 }
 
 /*std::vector<char> addon_client::get_addon_file(unsigned int addon_id);*/
@@ -165,6 +167,18 @@ config addon_client::get_addon_cfg(std::string addon_name)
 	return cfg;
 }
 
-//bool addon_client::is_pbl_valid(const config& pbl, std::string& error_message);
-//void addon_client::publish_addon(const config& addon, std::string login, std::string pass);
+//bool addon_client::is_addon_valid(const config& pbl, std::string login, std::string pass, std::string& error_message);
+void addon_client::publish_addon(const config& addon, std::string login, std::string pass)
+{
+	std::ostringstream parsed_config;
+	write(parsed_config, addon);
+	string_map_t args;
+	args["login"] = login;
+	args["password"] = pass;
+	args["wml"] = parsed_config.str();
+
+	std::ostringstream address;
+	address <<base_url_<< "publish/";
+	std::string response = get_response(address.str(), args, true);
+}
 //void addon_client::delete_remote_addon(std::string addon_name, std::string login, std::string pass);

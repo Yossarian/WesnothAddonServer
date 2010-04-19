@@ -63,7 +63,7 @@ public:
 	config get_addon_list_cfg();
 	config get_addon_cfg(unsigned int addon_id);
 	config get_addon_cfg(std::string addon_name);
-	bool is_pbl_valid(const config& pbl, std::string& error_message);
+	bool is_addon_valid(const config& pbl, std::string login, std::string pass, std::string& error_message);
 	void publish_addon(const config& addon, std::string login, std::string pass);
 	void delete_remote_addon(std::string addon_name, std::string login, std::string pass);
 
