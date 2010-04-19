@@ -527,114 +527,75 @@ namespace {
 
 	void upload_addon_to_server(game_display& disp, const std::string& addon, network::connection sock)
 	{
+		//Get credentials
 		std::string login_error_message;
 		gui2::tmp_login login_dialog(login_error_message, true);
 		login_dialog.show(disp.video());
-
-		std::string login = preferences::login();
-		std::string password = preferences::password();
-
-		//TODO: this terms thing with addon_client
-		/*config request_terms;
-		request_terms.add_child("request_terms");
-		network::send_data(request_terms, sock, true);
-		config data;
-		sock = network::receive_data(data,sock,5000);
-		if(!sock) {
-			gui2::show_error_message(disp.video(), _("Connection timed out"));
-			return;
-		} else if (const config &c = data.child("error")) {
-			std::string error_message = _("The server responded with an error: \"$error|\"");
-			utils::string_map symbols;
-			symbols["error"] = c["message"].str();
-			error_message = utils::interpolate_variables_into_string(error_message, &symbols);
-			gui2::show_error_message(disp.video(), error_message);
-			return;
-		} else if (const config &c = data.child("message")) {
-
-			if(gui2::show_message(disp.video()
-					,_("Terms")
-					, c["message"]
-					, gui2::tmessage::ok_cancel_buttons) != gui2::twindow::OK) {
-
-				return;
-			}
-		}*/
-
-		network::addon_client ac;
-		ac.set_base_url("http://localhost:8000/addons/");
-
-		config pbl;
-		get_addon_info(addon, pbl);
-
-		//Passphrase no longer used with new addon server
-		/*std::string passphrase = cfg["passphrase"];
-		// generate a random passphrase and write it to disk
-		// if the .pbl file doesn't provide one already
-		if(passphrase.empty()) {
-			passphrase.resize(8);
-			for(size_t n = 0; n != 8; ++n) {
-				passphrase[n] = 'a' + (rand()%26);
-			}
-			cfg["passphrase"] = passphrase;
-			set_addon_info(addon,cfg);
-		}*/
-
-		pbl["name"] = addon;
-
-		config addon_data; //actual addon content
-		archive_addon(addon,addon_data);
-
-		config data;
-		data.add_child("upload",pbl).add_child("data",addon_data);
-
-		LOG_NET << "uploading add-on...\n";
-		// @todo Should be enabled once the campaign server can be recompiled.
-		/*network::send_data(data, sock, true);
-
-		sock = dialogs::network_send_dialog(disp,_("Sending add-on"),data,sock);
-		if(!sock) {
-			return;
-		} else if (const config &c = data.child("error")) {
-			gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
-			                        c["message"].str() + '"');
-		} else if (const config &c = data.child("message")) {
-			gui2::show_transient_message(disp.video(), _("Response"), c["message"]);
-		}*/
-		try
+		if(login_dialog.get_retval() == gui2::twindow::OK)
 		{
-			ac.publish_addon(data, login, password);
-		}
-		catch(network::addon_client_error e)
-		{
-			gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
-				std::string(e.what()) + '"');
+			//User suplied some credentials
+			std::string login = preferences::login();
+			std::string password = preferences::password();
+
+			//Get PBL data of the addon
+			config pbl;
+			get_addon_info(addon, pbl);
+			pbl["name"] = addon;
+
+			//Get actual addon content
+			config addon_data; 
+			archive_addon(addon,addon_data);
+
+			//Merge both
+			config data;
+			data.add_child("upload",pbl).add_child("data",addon_data);
+
+			LOG_NET << "uploading add-on...\n";
+
+			//Upload
+			//TODO addon_client passed to this function from outside
+			//with base url already set!
+			network::addon_client ac;
+			ac.set_base_url("http://localhost:8000/addons/");
+			try
+			{
+				ac.publish_addon(data, login, password);
+			}
+			catch(network::addon_client_error e)
+			{
+				gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
+					std::string(e.what()) + '"');
+			}
 		}
 	}
 
 	void delete_remote_addon(game_display& disp, const std::string& addon, network::connection sock)
 	{
-		config cfg;
-		get_addon_info(addon,cfg);
+		//Get credentials
+		std::string login_error_message;
+		gui2::tmp_login login_dialog(login_error_message, true);
+		login_dialog.show(disp.video());
+		if(login_dialog.get_retval() == gui2::twindow::OK)
+		{
+			//User suplied some credentials
+			std::string login = preferences::login();
+			std::string password = preferences::password();
 
-		config msg;
-		msg["name"] = addon;
-		msg["passphrase"] = cfg["passphrase"];
-
-		config data;
-		data.add_child("delete",msg);
-
-		network::send_data(data, sock, true);
-
-		sock = network::receive_data(data,sock,5000);
-		if(!sock) {
-			gui2::show_error_message(disp.video(), _("Connection timed out"));
-		} else if (const config &c = data.child("error")) {
-			gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
-			                        c["message"].str() + '"');
-		} else if (const config &c = data.child("message")) {
-			gui2::show_transient_message(disp.video(), _("Response"), c["message"]);
+			//TODO addon_client passed to this function from outside
+			//with base url already set!
+			network::addon_client ac;
+			ac.set_base_url("http://localhost:8000/addons/");
+			try
+			{
+				ac.delete_remote_addon(addon, login, password);
+			}
+			catch(network::addon_client_error e)
+			{
+				gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
+					std::string(e.what()) + '"');
+			}
 		}
+		
 	}
 
 	bool install_addon(game_display& disp, config const& addons_tree,
@@ -654,23 +615,8 @@ namespace {
 		if (!addon_dependencies_met(disp, dependencies, addon_title)) return false;
 		// Proceed to download and install
 
-		//Old code 
-		/*config request;
-		request.add_child("request_campaign")["name"] = addon_id;
-		network::send_data(request, sock, true);*/
-
 		utils::string_map syms;
 		syms["addon_title"] = addon_title;
-		//const std::string& download_dlg_title =
-		//	utils::interpolate_variables_into_string(_("Downloading add-on: $addon_title|..."), &syms);
-
-		//Old code 
-		// WML structure where the add-on archive, or any error messages, are stored.
-		/*config cfg;
-		network::connection res = dialogs::network_receive_dialog(disp, download_dlg_title, cfg, sock);
-		if(!res) {
-			return false;
-		}*/
 
 		network::addon_client ac;
 		ac.set_base_url("http://localhost:8000/addons/");
@@ -1001,29 +947,6 @@ namespace {
 		try {
 			const network::manager net_manager;
 			network::connection sock; //left for compilability ;p
-			//Old code commented out
-			/*const network::connection sock =
-				dialogs::network_connect_dialog(disp, _("Connecting to add-ons server..."),
-				                                remote_host, remote_port);
-			//Old code commented out
-			if(!sock) {
-				gui2::show_error_message(disp.video(), _("Could not connect to host."));
-				preferences::set_campaign_server(old_host);
-				return;
-			}
-
-			config cfg;
-			cfg.add_child("request_campaign_list");
-			network::send_data(cfg, sock, true);
-			network::connection res = dialogs::network_receive_dialog(disp, _("Requesting list of add-ons"), cfg, sock);
-			if(!res) {
-				return;
-			}
-
-			if (config const &error = cfg.child("error")) {
-				gui2::show_error_message(disp.video(), error["message"]);oh
-				return;
-			}*/
 			
 			//New addon client code goes here for testing
 			network::addon_client ac;
