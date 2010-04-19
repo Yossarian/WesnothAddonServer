@@ -26,6 +26,10 @@
 #include "gui/dialogs/addon_connect.hpp"
 #include "gui/dialogs/addon_list.hpp"
 #include "gui/dialogs/message.hpp"
+
+//needed for gui2::tmp_login, login & password @ addon upload
+#include "gui\dialogs\mp_connect.hpp"
+
 #include "gui/dialogs/transient_message.hpp"
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/window.hpp"
@@ -523,7 +527,15 @@ namespace {
 
 	void upload_addon_to_server(game_display& disp, const std::string& addon, network::connection sock)
 	{
-		config request_terms;
+		std::string login_error_message;
+		gui2::tmp_login login_dialog(login_error_message, true);
+		login_dialog.show(disp.video());
+
+		std::string login = preferences::login();
+		std::string password = preferences::password();
+
+		//TODO: this terms thing with addon_client
+		/*config request_terms;
 		request_terms.add_child("request_terms");
 		network::send_data(request_terms, sock, true);
 		config data;
@@ -547,12 +559,16 @@ namespace {
 
 				return;
 			}
-		}
+		}*/
 
-		config cfg;
-		get_addon_info(addon,cfg);
+		network::addon_client ac;
+		ac.set_base_url("http://localhost:8000/addons/");
 
-		std::string passphrase = cfg["passphrase"];
+		config pbl;
+		get_addon_info(addon, pbl);
+
+		//Passphrase no longer used with new addon server
+		/*std::string passphrase = cfg["passphrase"];
 		// generate a random passphrase and write it to disk
 		// if the .pbl file doesn't provide one already
 		if(passphrase.empty()) {
@@ -562,19 +578,19 @@ namespace {
 			}
 			cfg["passphrase"] = passphrase;
 			set_addon_info(addon,cfg);
-		}
+		}*/
 
-		cfg["name"] = addon;
+		pbl["name"] = addon;
 
-		config addon_data;
+		config addon_data; //actual addon content
 		archive_addon(addon,addon_data);
 
-		data.clear();
-		data.add_child("upload",cfg).add_child("data",addon_data);
+		config data;
+		data.add_child("upload",pbl).add_child("data",addon_data);
 
 		LOG_NET << "uploading add-on...\n";
 		// @todo Should be enabled once the campaign server can be recompiled.
-		network::send_data(data, sock, true);
+		/*network::send_data(data, sock, true);
 
 		sock = dialogs::network_send_dialog(disp,_("Sending add-on"),data,sock);
 		if(!sock) {
@@ -584,6 +600,15 @@ namespace {
 			                        c["message"].str() + '"');
 		} else if (const config &c = data.child("message")) {
 			gui2::show_transient_message(disp.video(), _("Response"), c["message"]);
+		}*/
+		try
+		{
+			ac.publish_addon(data, login, password);
+		}
+		catch(network::addon_client_error e)
+		{
+			gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
+				std::string(e.what()) + '"');
 		}
 	}
 
