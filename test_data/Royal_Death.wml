@@ -4,7 +4,7 @@ description="A 9p free-for-all with minimal gold and a race against time."
 icon="items/cage.png"
 timestamp="1269300598"
 title="Royal Death"
-type="scenario_mp"
+type="Campaign"
 version="0.1.0"
 [dir]
 	name="Royal_Death"
