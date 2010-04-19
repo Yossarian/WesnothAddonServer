@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 #include <curl/curl.h>
 
 namespace network {
@@ -41,6 +42,13 @@ protected:
 
 	static size_t default_recv_callback
 		(void* buffer, size_t size, size_t nmemb, void* userp);
+
+	typedef std::map<std::string, std::string> string_map_t;
+	std::string get_response(std::string url,
+		string_map_t arguments = string_map_t(),
+		bool post = false);
+
+	std::string url_encode(std::string raw_string) const;
 
 public:
 	addon_client(void);
