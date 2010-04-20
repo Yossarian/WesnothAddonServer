@@ -2,6 +2,7 @@ import gzip, zlib, StringIO
 import socket, struct, glob, sys, shutil, threading, os, fnmatch
 import wesnoth.wmldata as wmldata
 import wesnoth.wmlparser as wmlparser
+import urllib
 import urllib2
 
 # See the following files (among others):
@@ -257,16 +258,24 @@ class CampaignClient:
 
         return self.decode(self.read_packet())
 
-    def delete_campaign(self, name, passphrase):
+    def delete_campaign(self, addon_id, login, password):
         """
         Deletes the named campaign on the server.
         """
-        request = wmldata.DataSub("delete")
-        request.set_text_val("name", name)
-        request.set_text_val("passphrase", passphrase)
 
-        self.send_packet(self.make_packet(request))
-        return self.decode(self.read_packet())
+        data = urllib.urlencode({"login" : login, "password" : password})
+        req = urllib2.Request('http://' + self.address + '/addons/remove/'
+                                + str(addon_id) + '/', data)
+        
+        response = urllib2.urlopen(req)
+        data = response.read()
+        #request = wmldata.DataSub("delete")
+        #request.set_text_val("name", name)
+        #request.set_text_val("passphrase", passphrase)
+
+        #self.send_packet(self.make_packet(request))
+        #return self.decode(self.read_packet())
+        return None
 
     def change_passphrase(self, name, old, new):
         """

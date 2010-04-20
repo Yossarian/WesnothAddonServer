@@ -48,6 +48,8 @@ if __name__ == "__main__":
         default = ".")
     optionparser.add_option("-P", "--password",
         help = "password to use")
+    optionparser.add_option("-L", "--login",
+        help = "user login to use")
     optionparser.add_option("-d", "--download",
         help = "download the named add-on; " +
         "name may be a Python regexp matched against all add-on names " +
@@ -79,7 +81,7 @@ if __name__ == "__main__":
         help = "be even more verbose for everything",
         action = "store_true",)
     optionparser.add_option("-r", "--remove",
-        help = "remove the named add-on from the server, " +
+        help = "remove the add-on from the server, " +
         "set the password -P")
     optionparser.add_option("-R", "--raw-download",
         action = "store_true",
@@ -110,7 +112,6 @@ if __name__ == "__main__":
         address += ":" + str(port)
 
     def get(id, name, version, uploads, cdir):
-	print "geeet"
         mythread = cs.get_campaign_raw_async(id)
 
         pcounter = 0
@@ -267,9 +268,9 @@ if __name__ == "__main__":
         cs.unpackdir(decoded, options.campaigns_dir,  verbose = True)
     elif options.remove:
         cs = CampaignClient(address)
-        data = cs.delete_campaign(options.remove, options.password)
-        for message in data.find_all("message", "error"):
-            print message.get_text_val("message")
+        m = cs.delete_campaign(options.remove, options.login, options.password)
+        #for message in data.find_all("message", "error"):
+        #    print message.get_text_val("message")
 
     elif options.change_passphrase:
         cs = CampaignClient(address)

@@ -299,7 +299,7 @@ def remove(request, addon_id):
 	login = request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
 
-	addon = Addon.get_addon(id=addon_id)
+	addon = Addon.get_addon(addon_id)
 
 	errors_credentials = ( user == None )
 	errors_permissions = ( len(addon.authors.filter(name=login)) == 0 )
