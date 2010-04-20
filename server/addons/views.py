@@ -243,10 +243,11 @@ def removeForm(request, addon_id):
 	return render_to_response('addons/confirmRemove.html', {'addon_id':addon_id,'addon': addon})
 	
 def remove(request, addon_id):
+	logger.info("Attempt to remove addon #"+addon_id+"("+addon.name+") by "+login+" from "+request.META['REMOTE_ADDR']);
 	login = request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
 
-	addon = Addon.get_addon(id=addon_id)
+	addon = Addon.get_addon(addon_id)
 
 	errors_credentials = ( user == None )
 	errors_permissions = ( len(addon.authors.filter(name=login)) == 0 )
