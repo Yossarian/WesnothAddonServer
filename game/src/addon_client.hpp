@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <map>
 #include <curl/curl.h>
 
 namespace network {
@@ -42,6 +43,13 @@ protected:
 	static size_t default_recv_callback
 		(void* buffer, size_t size, size_t nmemb, void* userp);
 
+	typedef std::map<std::string, std::string> string_map_t;
+	std::string get_response(std::string url,
+		string_map_t arguments = string_map_t(),
+		bool post = false);
+
+	std::string url_encode(std::string raw_string) const;
+
 public:
 	addon_client(void);
 	~addon_client(void);
@@ -55,8 +63,9 @@ public:
 	config get_addon_list_cfg();
 	config get_addon_cfg(unsigned int addon_id);
 	config get_addon_cfg(std::string addon_name);
-
-	//std::vector<char> get_addon_file(unsigned int addon_id); not yet implemented
+	bool is_addon_valid(const config& pbl, std::string login, std::string pass, std::string& error_message);
+	void publish_addon(const config& addon, std::string login, std::string pass);
+	void delete_remote_addon(std::string addon_name, std::string login, std::string pass);
 
 	//TODO: callback registering methods
 	//or perhaps even dialog registering?

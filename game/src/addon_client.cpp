@@ -1,4 +1,5 @@
 #include "addon_client.hpp"
+#include "foreach.hpp"
 #include "serialization/parser.hpp"
 #include <sstream>
 
@@ -37,6 +38,63 @@ addon_client::~addon_client(void)
 	curl_easy_cleanup(handle_);
 }
 
+std::string addon_client::url_encode(std::string raw_string) const
+{
+	//this may be slow but it shouldn't become a bottleneck
+	//during any sane use case
+	//optimize only if you really need to
+	std::ostringstream encoded;
+	foreach(char c, raw_string)
+	{
+		//note: you could just convert /all/ chars to %hex_val and it would be
+		//proper but typically only special chars are escaped in such a way
+		if ( (48 <= c && c <= 57) ||//0-9
+			(65 <= c && c <= 90) ||//abc...xyz
+			(97 <= c && c <= 122)) //ABC...XYZ
+		{
+			encoded << c;
+		}
+		else
+		{
+			encoded << '%' << std::hex << int(c);
+		}
+	}
+	return encoded.str();
+}
+
+std::string addon_client::get_response(std::string url, 
+		string_map_t arguments,
+		bool post)
+{
+	//convert arguments to an encoded string like key=value?other+key=1
+	std::ostringstream params;
+	for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++)
+		params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
+
+
+	if(post)
+	{
+		//set post body
+		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params.str().c_str()));
+	}
+	else //GET
+	{
+		//just slap the params to the url
+		url += std::string("?") + params.str();
+	}
+
+	//setup actual url
+	curl_easy_setopt(handle_, CURLOPT_URL, url.c_str());
+
+	//setup data to pass to callback
+	std::string buffer;
+	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
+
+	//execute
+	flush();
+	return buffer;
+}
+
 void addon_client::flush()
 {
 	CURLcode error = curl_easy_perform(handle_);
@@ -53,31 +111,19 @@ void addon_client::set_base_url(std::string base_url)
 std::string addon_client::get_addon_description(unsigned int addon_id)
 {
 	std::ostringstream address;
-	address << base_url_ << "details/" << addon_id <<"/?simple_iface";
-
-	//setup data to pass to callback
-	std::string buffer;
-	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
-
-	//setup actual url
-	curl_easy_setopt(handle_, CURLOPT_URL, address.str().c_str());
-	flush();
-	return buffer;
+	address <<base_url_<< "details/" << addon_id <<"/?simple_iface";
+	
+	return get_response(address.str());
 }
 
 std::string addon_client::get_addon_list()
 {
 	std::ostringstream address;
-	address << base_url_<<"?simple_iface";
+	address <<base_url_;//<<"?simple_iface";
+	string_map_t args;
+	args["simple_iface"] = "1";
 
-	//setup data to pass to callback
-	std::string buffer;
-	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
-
-	//setup actual url
-	curl_easy_setopt(handle_, CURLOPT_URL,address.str().c_str());
-	flush();
-	return buffer;
+	return get_response(address.str(), args);;
 }
 
 /*std::vector<char> addon_client::get_addon_file(unsigned int addon_id);*/
@@ -113,16 +159,50 @@ config addon_client::get_addon_cfg(unsigned int addon_id)
 config addon_client::get_addon_cfg(std::string addon_name)
 {
 	std::ostringstream address;
-	address << base_url_ << "download/" << addon_name <<"/?wml";
+	address <<base_url_<< "download/" << url_encode(addon_name) <<"/?wml";
 
-	//setup data to pass to callback
-	std::string buffer;
-	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
-
-	//setup actual url
-	curl_easy_setopt(handle_, CURLOPT_URL, address.str().c_str());
-	flush();
+	std::string buffer = get_response(address.str());
 	config cfg;
 	read(cfg, buffer);
 	return cfg;
+}
+
+//bool addon_client::is_addon_valid(const config& pbl, std::string login, std::string pass, std::string& error_message);
+void addon_client::publish_addon(const config& addon, std::string login, std::string pass)
+{
+	std::ostringstream parsed_config;
+	write(parsed_config, addon);
+	string_map_t args;
+	args["login"] = login;
+	args["password"] = pass;
+	args["wml"] = parsed_config.str();
+
+	std::ostringstream address;
+	address <<base_url_<< "publish/";
+	std::string response = get_response(address.str(), args, true);
+
+	//error handling
+	config response_cfg;
+	read(response_cfg, response);
+	if (config const &error = response_cfg.child("error")) {
+		throw addon_client_error(error["message"]);
+	}
+}
+
+void addon_client::delete_remote_addon(std::string addon_name, std::string login, std::string pass)
+{
+	string_map_t args;
+	args["login"] = login;
+	args["password"] = pass;
+
+	std::ostringstream address;
+	address <<base_url_<< "remove/" << url_encode(addon_name) <<"/";
+	std::string response = get_response(address.str(), args, true);
+
+	//error handling
+	/*config response_cfg;
+	read(response_cfg, response);
+	if (config const &error = response_cfg.child("error")) {
+		throw addon_client_error(error["message"]);
+	}*/
 }
