@@ -299,7 +299,7 @@ void addon_client::async_delete_remote_addon(
 		this,
 		&pd,
 		true,
-		boost:boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
+		boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
 		);	
 }
 
