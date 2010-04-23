@@ -949,9 +949,14 @@ namespace {
 			network::connection sock; //left for compilability ;p
 			
 			//New addon client code goes here for testing
+			network::progress_data pd;
 			network::addon_client ac;
 			ac.set_base_url("http://localhost:8000/addons/");
-			config cfg = ac.get_addon_list_cfg();
+			ac.async_get_addon_list(pd);
+			ac.async_wait();
+			std::string addon_lst = ac.get_async_response();
+			config cfg;
+			read(cfg, addon_lst);
 			//Old code again
 
 			config const &addons_tree = cfg.child("campaigns");
