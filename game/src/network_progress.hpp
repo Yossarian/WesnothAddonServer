@@ -31,42 +31,42 @@ namespace network {
 		}
 
 		double done() const {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			return done_;
 		}
 
 		double total() const {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			return total_;
 		}
 
 		bool abort() const {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			return abort_;
 		}
 
 		bool running() const {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			return running_;
 		}
 
 		void set_done(double v) {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			done_ = v;
 		}
 
 		void set_total(double v) {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			total_ = v;
 		}
 
 		void set_abort(bool v) {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			abort_ = v;
 		}
 
 		void set_running(bool v) {
-			boost::mutex::scoped_lock lock(mutex);
+			boost::mutex::scoped_lock lock(mutex_);
 			running_ = v;
 		}
 

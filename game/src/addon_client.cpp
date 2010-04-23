@@ -1,9 +1,11 @@
 #include "addon_client.hpp"
 #include "foreach.hpp"
 #include "serialization/parser.hpp"
+#include <boost/bind.hpp>
+#include <boost/thread/thread.hpp>
 #include <sstream>
 
-using namespace network;
+namespace network {
 
 addon_client_error::addon_client_error(std::string why) :
 std::runtime_error(why)
@@ -17,9 +19,6 @@ addon_client::addon_client(void)
 	//DEBUG: make verbose
 	//TODO: get rid of this in production code
 	//curl_easy_setopt(handle_, CURLOPT_VERBOSE, 1);
-
-	//autoadd http headers
-	curl_easy_setopt(handle_, CURLOPT_HEADER, 1);
 
 	//put errors in readable form into error_buffer
 	curl_easy_setopt(handle_, CURLOPT_ERRORBUFFER, error_buffer_);
@@ -126,9 +125,6 @@ std::string addon_client::get_addon_list()
 	return get_response(address.str(), args);;
 }
 
-/*std::vector<char> addon_client::get_addon_file(unsigned int addon_id);*/
-//Might want to use a different callback then default for big files!
-
 size_t addon_client::default_recv_callback
 		(void* buffer, size_t size, size_t nmemb, void* userp)
 {
@@ -158,17 +154,20 @@ config addon_client::get_addon_cfg(unsigned int addon_id)
 
 config addon_client::get_addon_cfg(std::string addon_name)
 {
-	std::ostringstream address;
-	address <<base_url_<< "download/" << url_encode(addon_name) <<"/?wml";
-
-	std::string buffer = get_response(address.str());
 	config cfg;
-	read(cfg, buffer);
+	read(cfg, get_addon(addon_name));
 	return cfg;
 }
 
+std::string addon_client::get_addon(std::string addon_name)
+{
+	std::ostringstream address;
+	address <<base_url_<< "download/" << url_encode(addon_name) <<"/?wml";
+	return get_response(address.str());
+}
+
 //bool addon_client::is_addon_valid(const config& pbl, std::string login, std::string pass, std::string& error_message);
-void addon_client::publish_addon(const config& addon, std::string login, std::string pass)
+std::string addon_client::publish_addon(const config& addon, std::string login, std::string pass)
 {
 	std::ostringstream parsed_config;
 	write(parsed_config, addon);
@@ -179,17 +178,10 @@ void addon_client::publish_addon(const config& addon, std::string login, std::st
 
 	std::ostringstream address;
 	address <<base_url_<< "publish/";
-	std::string response = get_response(address.str(), args, true);
-
-	//error handling
-	config response_cfg;
-	read(response_cfg, response);
-	if (config const &error = response_cfg.child("error")) {
-		throw addon_client_error(error["message"]);
-	}
+	return get_response(address.str(), args, true);
 }
 
-void addon_client::delete_remote_addon(std::string addon_name, std::string login, std::string pass)
+std::string addon_client::delete_remote_addon(std::string addon_name, std::string login, std::string pass)
 {
 	string_map_t args;
 	args["login"] = login;
@@ -197,12 +189,118 @@ void addon_client::delete_remote_addon(std::string addon_name, std::string login
 
 	std::ostringstream address;
 	address <<base_url_<< "remove/" << url_encode(addon_name) <<"/";
-	std::string response = get_response(address.str(), args, true);
+	return get_response(address.str(), args, true);
 
-	//error handling
-	/*config response_cfg;
-	read(response_cfg, response);
-	if (config const &error = response_cfg.child("error")) {
-		throw addon_client_error(error["message"]);
-	}*/
+	
 }
+/*
+-----------------------
+Async methods and stuff
+-----------------------
+*/
+
+int addon_client::upload_progress_callback(
+		void *clientp,
+		double dltotal,
+		double dlnow,
+		double ultotal,
+		double ulnow)
+{
+	progress_data* pd = static_cast<progress_data>(clientp);
+	if(pd->abort())
+		return 666; //client aborted
+	pd->set_done(ulnow);
+	pd->set_total(ultotal);	
+	return 0;
+}
+
+int addon_client::download_progress_callback(
+		void *clientp,
+		double dltotal,
+		double dlnow,
+		double ultotal,
+		double ulnow)
+{
+	progress_data* pd = static_cast<progress_data>(clientp);
+	if(pd->abort())
+		return 666; //client aborted
+	pd->set_done(dlnow);
+	pd->set_total(dltotal);	
+	return 0;
+}
+
+void addon_client::async_entry(
+		progress_data& pd,
+		bool download,
+		boost::function<std::string (void)> blocking_fun)
+{
+	pd.set_running(true);
+	async_response_buffer_.clear();
+	curl_easy_setopt(handle_, CURLOPT_NOPROGRESS, 0);
+	if(download)
+		curl_easy_setopt(handle_, CURLOPT_PROGRESSFUNCTION, addon_client::download_progress_callback);
+	else
+		curl_easy_setopt(handle_, CURLOPT_PROGRESSFUNCTION, addon_client::upload_progress_callback);
+	curl_easy_setopt(handle_, CURLOPT_PROGRESSDATA, (void*)(&pd));
+	async_response_buffer_ = blocking_fun();
+	pd.set_running(false);
+}
+
+void addon_client::async_get_addon_list(progress_data& pd)
+{
+	boost::thread ac_thread(
+		async_entry(
+			pd,
+			true,
+			boost::bind(&addon_client::get_addon_list, this)
+			)
+		);	
+}
+
+void addon_client::async_get_addon(progress_data& pd, std::string name)
+{
+	boost::thread ac_thread(
+		async_entry(
+			pd,
+			true,
+			boost::bind(&addon_client::get_addon, this, name)
+			)
+		);	
+}
+
+void addon_client::async_publish_addon(
+	progress_data& pd, 
+	const config& addon, 
+	std::string login, 
+	std::string pass)
+{
+	boost::thread ac_thread(
+		async_entry(
+			pd,
+			true,
+			boost::bind(&addon_client::publish_addon, this, addon, login, pass)
+			)
+		);	
+}
+
+void addon_client::async_delete_remote_addon(
+	progress_data& pd, 
+	std::string addon_name, 
+	std::string login, 
+	std::string pass)
+{
+	boost::thread ac_thread(
+		async_entry(
+			pd,
+			true,
+			boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
+			)
+		);	
+}
+
+std::string addon_client::get_async_response() const
+{
+	return async_response_buffer_;
+}
+
+} //end namespace network
