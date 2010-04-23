@@ -248,7 +248,8 @@ void addon_client::async_entry(
 
 void addon_client::async_get_addon_list(progress_data& pd)
 {
-	boost::thread ac_thread(
+	async_wait(); //Previous calls must finish
+	thread_ = boost::thread(
 		async_entry(
 			pd,
 			true,
@@ -259,7 +260,8 @@ void addon_client::async_get_addon_list(progress_data& pd)
 
 void addon_client::async_get_addon(progress_data& pd, std::string name)
 {
-	boost::thread ac_thread(
+	async_wait(); //Previous calls must finish
+	thread_ = boost::thread(
 		async_entry(
 			pd,
 			true,
@@ -274,7 +276,8 @@ void addon_client::async_publish_addon(
 	std::string login, 
 	std::string pass)
 {
-	boost::thread ac_thread(
+	async_wait(); //Previous calls must finish
+	thread_ = boost::thread(
 		async_entry(
 			pd,
 			true,
@@ -289,13 +292,19 @@ void addon_client::async_delete_remote_addon(
 	std::string login, 
 	std::string pass)
 {
-	boost::thread ac_thread(
+	async_wait(); //Previous calls must finish
+	thread_ = boost::thread(
 		async_entry(
 			pd,
 			true,
 			boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
 			)
 		);	
+}
+
+void addon_client::async_wait()
+{
+	thread_.join();
 }
 
 std::string addon_client::get_async_response() const

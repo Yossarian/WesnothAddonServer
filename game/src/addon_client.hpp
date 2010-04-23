@@ -20,6 +20,7 @@
 #include "network_progress.hpp"
 
 #include <boost/function.hpp>
+#include <boost/thread/thread.hpp>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -80,8 +81,9 @@ public:
 	
 	/*
 	Async versions, won't block and can be aborted. 
-	Will report progress through progress_data. Get results by calling
-	get_async_response() when progress_data::running() == false.
+	Will report progress through progress_data. 
+	Get results by callingget_async_response() when progress_data::running() == false.
+	Abort by calling progress_data::set_abort(true)
 	*/
 	void async_get_addon_list(progress_data& pd);
 	void async_get_addon(progress_data& pd, std::string name);
@@ -96,6 +98,10 @@ public:
 		std::string login, 
 		std::string pass);
 
+	//waits for the last async_* operation to finish
+	//returns immediately if it's already finished
+	void async_wait();
+
 	//returns string that should be parsable wml unless there was
 	//a weird server error or something
 	std::string get_async_response() const;
@@ -105,7 +111,7 @@ protected:
 	CURL* handle_;
 	char error_buffer_[CURL_ERROR_SIZE];
 	std::string async_response_buffer_;
-
+	boost::thread thread_;
 	void flush();
 
 	static size_t default_recv_callback(
