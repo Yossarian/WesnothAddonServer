@@ -28,7 +28,7 @@
 #include "gui/dialogs/message.hpp"
 
 //needed for gui2::tmp_login, login & password @ addon upload
-#include "gui\dialogs\mp_connect.hpp"
+#include "gui/dialogs/mp_connect.hpp"
 
 #include "gui/dialogs/transient_message.hpp"
 #include "gui/widgets/settings.hpp"
