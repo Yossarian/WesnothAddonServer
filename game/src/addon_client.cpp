@@ -155,7 +155,8 @@ config addon_client::get_addon_cfg(unsigned int addon_id)
 config addon_client::get_addon_cfg(std::string addon_name)
 {
 	config cfg;
-	read(cfg, get_addon(addon_name));
+	std::string wml = get_addon(addon_name);
+	read(cfg, wml);
 	return cfg;
 }
 
@@ -201,12 +202,12 @@ Async methods and stuff
 
 int addon_client::upload_progress_callback(
 		void *clientp,
-		double dltotal,
-		double dlnow,
+		double /*dltotal*/,
+		double /*dlnow*/,
 		double ultotal,
 		double ulnow)
 {
-	progress_data* pd = static_cast<progress_data>(clientp);
+	progress_data* pd = (progress_data*)(clientp);
 	if(pd->abort())
 		return 666; //client aborted
 	pd->set_done(ulnow);
@@ -218,10 +219,10 @@ int addon_client::download_progress_callback(
 		void *clientp,
 		double dltotal,
 		double dlnow,
-		double ultotal,
-		double ulnow)
+		double /*ultotal*/,
+		double /*ulnow*/)
 {
-	progress_data* pd = static_cast<progress_data>(clientp);
+	progress_data* pd = (progress_data*)(clientp);
 	if(pd->abort())
 		return 666; //client aborted
 	pd->set_done(dlnow);
@@ -230,31 +231,31 @@ int addon_client::download_progress_callback(
 }
 
 void addon_client::async_entry(
-		progress_data& pd,
+		progress_data* pd,
 		bool download,
 		boost::function<std::string (void)> blocking_fun)
 {
-	pd.set_running(true);
+	pd->set_running(true);
 	async_response_buffer_.clear();
 	curl_easy_setopt(handle_, CURLOPT_NOPROGRESS, 0);
 	if(download)
 		curl_easy_setopt(handle_, CURLOPT_PROGRESSFUNCTION, addon_client::download_progress_callback);
 	else
 		curl_easy_setopt(handle_, CURLOPT_PROGRESSFUNCTION, addon_client::upload_progress_callback);
-	curl_easy_setopt(handle_, CURLOPT_PROGRESSDATA, (void*)(&pd));
+	curl_easy_setopt(handle_, CURLOPT_PROGRESSDATA, (void*)(pd));
 	async_response_buffer_ = blocking_fun();
-	pd.set_running(false);
+	pd->set_running(false);
 }
 
 void addon_client::async_get_addon_list(progress_data& pd)
 {
 	async_wait(); //Previous calls must finish
 	thread_ = boost::thread(
-		async_entry(
-			pd,
-			true,
-			boost::bind(&addon_client::get_addon_list, this)
-			)
+		&addon_client::async_entry,
+		this,
+		&pd,
+		true,
+		boost::bind(&addon_client::get_addon_list, this)
 		);	
 }
 
@@ -262,11 +263,11 @@ void addon_client::async_get_addon(progress_data& pd, std::string name)
 {
 	async_wait(); //Previous calls must finish
 	thread_ = boost::thread(
-		async_entry(
-			pd,
-			true,
-			boost::bind(&addon_client::get_addon, this, name)
-			)
+		&addon_client::async_entry,
+		this,
+		&pd,
+		true,
+		boost::bind(&addon_client::get_addon, this, name)
 		);	
 }
 
@@ -278,11 +279,11 @@ void addon_client::async_publish_addon(
 {
 	async_wait(); //Previous calls must finish
 	thread_ = boost::thread(
-		async_entry(
-			pd,
-			true,
-			boost::bind(&addon_client::publish_addon, this, addon, login, pass)
-			)
+		&addon_client::async_entry,
+		this,
+		&pd,
+		true,
+		boost::bind(&addon_client::publish_addon, this, addon, login, pass)		
 		);	
 }
 
@@ -294,11 +295,11 @@ void addon_client::async_delete_remote_addon(
 {
 	async_wait(); //Previous calls must finish
 	thread_ = boost::thread(
-		async_entry(
-			pd,
-			true,
-			boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
-			)
+		&addon_client::async_entry,
+		this,
+		&pd,
+		true,
+		boost:boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
 		);	
 }
 

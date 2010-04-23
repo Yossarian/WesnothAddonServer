@@ -133,7 +133,7 @@ protected:
 		double ulnow);
 
 	void async_entry(
-		progress_data& pd,
+		progress_data* pd,
 		bool download,
 		boost::function<std::string (void)> blocking_fun);
 
