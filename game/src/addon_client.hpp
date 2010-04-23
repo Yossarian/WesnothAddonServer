@@ -17,7 +17,7 @@
 #define ADDON_CLIENT_HPP_INCLUDED
 
 #include "config.hpp"
-#include "network_progress.hpp"
+#include "network_progress_data.hpp"
 
 #include <boost/function.hpp>
 #include <boost/thread/thread.hpp>

@@ -1,0 +1,90 @@
+/* $Id$ */
+/*
+   Copyright (C) 2008 - 2010 by Mark de Wever <koraq@xs4all.nl>
+   Part of the Battle for Wesnoth Project http://www.wesnoth.org/
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License version 2
+   or at your option any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY.
+
+   See the COPYING file for more details.
+*/
+
+#define GETTEXT_DOMAIN "wesnoth-lib"
+
+#include "gui/dialogs/network_progress.hpp"
+
+#include "foreach.hpp"
+#include "gui/auxiliary/timer.hpp"
+#include "gui/dialogs/field.hpp"
+#include "gui/widgets/button.hpp"
+#include "gui/widgets/listbox.hpp"
+#include "gui/widgets/label.hpp"
+#include "gui/widgets/password_box.hpp"
+#include "gui/widgets/settings.hpp"
+#include "gui/widgets/scroll_label.hpp"
+#include "gui/widgets/toggle_button.hpp"
+
+#include <boost/bind.hpp>
+
+namespace gui2 {
+
+tnetwork_progress::tnetwork_progress()
+	: pd_(NULL)
+{
+}
+
+tnetwork_progress::~tnetwork_progress()
+{
+        if(poll_progress_timer_) {
+        	remove_timer(poll_progress_timer_);
+	}
+}
+
+void tnetwork_progress::set_progress_object(network::progress_data &pd)
+{
+        pd_ = &pd;
+}
+                                
+
+twindow* tnetwork_progress::build_window(CVideo& video)
+{
+	return build(video, get_id(NETWORK_PROGRESS));
+}
+
+void tnetwork_progress::pre_show(CVideo& video, twindow& window)
+{
+	assert(pd_);
+
+	// Set view list callback button.
+	if(tbutton* button = find_widget<tbutton>(&window, "abort", false, false)) {
+
+		button->connect_signal_mouse_left_click(boost::bind(
+				  &tnetwork_progress::abort
+				, this
+				, boost::ref(window)));
+	}
+        poll_progress_timer_ = add_timer(100
+                                , boost::bind(&tnetwork_progress::poll_progress, this, boost::ref(window))
+				, true);                        
+}
+
+void tnetwork_progress::post_show(twindow& /*window*/)
+{
+}
+
+void tnetwork_progress::poll_progress(twindow& window)
+{
+	if (!pd_->running()) {
+		window.close();
+	}
+}
+
+void tnetwork_progress::abort(twindow& window)
+{
+	pd_->set_abort(true);
+}
+
+} // end namespace gui2
