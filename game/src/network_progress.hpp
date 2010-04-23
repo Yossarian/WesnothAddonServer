@@ -30,22 +30,22 @@ namespace network {
 		{
 		}
 
-		double done() const {
+		double done() {
 			boost::mutex::scoped_lock lock(mutex_);
 			return done_;
 		}
 
-		double total() const {
+		double total() {
 			boost::mutex::scoped_lock lock(mutex_);
 			return total_;
 		}
 
-		bool abort() const {
+		bool abort() {
 			boost::mutex::scoped_lock lock(mutex_);
 			return abort_;
 		}
 
-		bool running() const {
+		bool running() {
 			boost::mutex::scoped_lock lock(mutex_);
 			return running_;
 		}
