@@ -26,6 +26,7 @@
 #include "gui/dialogs/addon_connect.hpp"
 #include "gui/dialogs/addon_list.hpp"
 #include "gui/dialogs/message.hpp"
+#include "gui/dialogs/network_progress.hpp"
 
 //needed for gui2::tmp_login, login & password @ addon upload
 #include "gui/dialogs/mp_connect.hpp"
@@ -953,6 +954,9 @@ namespace {
 			network::addon_client ac;
 			ac.set_base_url("http://localhost:8000/addons/");
 			ac.async_get_addon_list(pd);
+			gui2::tnetwork_progress dialog;
+			dialog.set_progress_object(pd);
+			dialog.show(disp.video());
 			ac.async_wait();
 			std::string addon_lst = ac.get_async_response();
 			config cfg;
