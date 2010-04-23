@@ -137,7 +137,9 @@ protected:
 		bool download,
 		boost::function<std::string (void)> blocking_fun);
 
-	typedef std::map<std::string, std::string> string_map_t;
+        void async_wrap(progress_data& pd, bool down, boost::function<std::string()>);
+        
+        typedef std::map<std::string, std::string> string_map_t;
 	std::string get_response(std::string url,
 		string_map_t arguments = string_map_t(),
 		bool post = false);

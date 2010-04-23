@@ -233,7 +233,7 @@ int addon_client::download_progress_callback(
 void addon_client::async_entry(
 		progress_data* pd,
 		bool download,
-		boost::function<std::string (void)> blocking_fun)
+		boost::function<std::string ()> blocking_fun)
 {
 	pd->set_running(true);
 	async_response_buffer_.clear();
@@ -247,28 +247,22 @@ void addon_client::async_entry(
 	pd->set_running(false);
 }
 
+void addon_client::async_wrap(progress_data& pd, bool down, boost::function<std::string()> f)
+{
+        async_wait(); //Previous calls must finish
+	thread_ = boost::thread(&addon_client::async_entry, this, &pd, down, f);
+}
+
 void addon_client::async_get_addon_list(progress_data& pd)
 {
-	async_wait(); //Previous calls must finish
-	thread_ = boost::thread(
-		&addon_client::async_entry,
-		this,
-		&pd,
-		true,
-		boost::bind(&addon_client::get_addon_list, this)
-		);	
+	boost::function<std::string()> f = boost::bind(&addon_client::get_addon_list, this);	
+	async_wrap(pd, true, f);		
 }
 
 void addon_client::async_get_addon(progress_data& pd, std::string name)
 {
-	async_wait(); //Previous calls must finish
-	thread_ = boost::thread(
-		&addon_client::async_entry,
-		this,
-		&pd,
-		true,
-		boost::bind(&addon_client::get_addon, this, name)
-		);	
+	boost::function<std::string()> f = boost::bind(&addon_client::get_addon, this, name);
+	async_wrap(pd, true, f);
 }
 
 void addon_client::async_publish_addon(
@@ -277,13 +271,9 @@ void addon_client::async_publish_addon(
 	std::string login, 
 	std::string pass)
 {
-	async_wait(); //Previous calls must finish
-	thread_ = boost::thread(
-		&addon_client::async_entry,
-		this,
-		&pd,
-		true,
-		boost::bind(&addon_client::publish_addon, this, addon, login, pass)		
+	async_wrap(pd, true, boost::bind(
+		&addon_client::publish_addon,
+		this, addon, login, pass)		
 		);	
 }
 
@@ -293,14 +283,10 @@ void addon_client::async_delete_remote_addon(
 	std::string login, 
 	std::string pass)
 {
-	async_wait(); //Previous calls must finish
-	thread_ = boost::thread(
-		&addon_client::async_entry,
-		this,
-		&pd,
-		true,
-		boost::bind(&addon_client::delete_remote_addon, this, addon_name, login, pass)
-		);	
+	async_wrap(pd, true, boost::bind(
+		&addon_client::delete_remote_addon, 
+		this, addon_name, login, pass)
+		);
 }
 
 void addon_client::async_wait()
