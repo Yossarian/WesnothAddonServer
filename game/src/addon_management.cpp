@@ -952,12 +952,16 @@ namespace {
 			//New addon client code goes here for testing
 			network::progress_data pd;
 			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons/");
+			ac.set_base_url(remote_address);
 			ac.async_get_addon_list(pd);
 			gui2::tnetwork_progress dialog;
 			dialog.set_progress_object(pd);
 			dialog.show(disp.video());
-			ac.async_wait();
+			//ac.async_wait();
+                        assert(!pd.running());
+			if (pd.abort()) {
+			        return;
+                        }
 			std::string addon_lst = ac.get_async_response();
 			config cfg;
 			read(cfg, addon_lst);
