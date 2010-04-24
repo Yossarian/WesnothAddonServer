@@ -243,7 +243,16 @@ void addon_client::async_entry(
 	else
 		curl_easy_setopt(handle_, CURLOPT_PROGRESSFUNCTION, addon_client::upload_progress_callback);
 	curl_easy_setopt(handle_, CURLOPT_PROGRESSDATA, (void*)(pd));
-	async_response_buffer_ = blocking_fun();
+	try 
+	{
+		async_response_buffer_ = blocking_fun();
+	}
+	catch(addon_client_error e)
+	{
+		std::ostringstream error;
+		error << "[error]" << std::endl << "message=" << e.what() << std::endl <<"[/error]";
+		async_response_buffer_ = error.str();
+	}
 	pd->set_running(false);
 }
 
