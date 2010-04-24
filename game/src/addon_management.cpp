@@ -958,13 +958,21 @@ namespace {
 			dialog.set_progress_object(pd);
 			dialog.show(disp.video());
 			//ac.async_wait();
-                        assert(!pd.running());
-			if (pd.abort()) {
-			        return;
-                        }
+			assert(!pd.running());
+			if (pd.abort()) 
+			{
+				return;
+			}
+			
 			std::string addon_lst = ac.get_async_response();
+			std::cerr << "addon_lst: " << addon_lst <<"\n/addon_lst\n";
 			config cfg;
-			read(cfg, addon_lst);
+			read(cfg, addon_lst);			
+			std::cerr << "cfg: " << cfg <<"\n/cfg\n";
+			if (config const &dlerror = cfg.child("error")) {
+				gui2::show_error_message(disp.video(), dlerror["message"]);
+				return;
+			}
 			//Old code again
 
 			config const &addons_tree = cfg.child("campaigns");
