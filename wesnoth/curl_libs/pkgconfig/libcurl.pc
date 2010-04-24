@@ -8,5 +8,5 @@ pango_module_version=1.6.0
 Name: libcurl
 Version: 7.18
 Description: libcurl
-Libs: -lcurl
+Libs: -lcurl -lcurl_imp
 Cflags: -I${includedir}
