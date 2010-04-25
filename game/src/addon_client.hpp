@@ -104,7 +104,7 @@ public:
 
 	//returns string that should be parsable wml unless there was
 	//a weird server error or something
-	std::string get_async_response() const;
+	std::string get_async_response();
 
 protected:
 	std::string base_url_;

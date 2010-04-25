@@ -315,8 +315,9 @@ void addon_client::async_wait()
 	thread_.join();
 }
 
-std::string addon_client::get_async_response() const
+std::string addon_client::get_async_response()
 {
+	async_wait();
 	return async_response_buffer_;
 }
 
