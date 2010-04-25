@@ -73,6 +73,7 @@ std::string addon_client::get_response(std::string url,
 
 	if(post)
 	{
+		curl_easy_setopt(handle_, CURLOPT_POST, 1);
 		//set post body
 		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params.str().c_str()));
 	}
