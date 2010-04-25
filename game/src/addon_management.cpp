@@ -26,9 +26,10 @@
 #include "gui/dialogs/addon_connect.hpp"
 #include "gui/dialogs/addon_list.hpp"
 #include "gui/dialogs/message.hpp"
+#include "gui/dialogs/network_progress.hpp"
 
 //needed for gui2::tmp_login, login & password @ addon upload
-#include "gui\dialogs\mp_connect.hpp"
+#include "gui/dialogs/mp_connect.hpp"
 
 #include "gui/dialogs/transient_message.hpp"
 #include "gui/widgets/settings.hpp"
@@ -52,6 +53,11 @@ static lg::log_domain log_filesystem("filesystem");
 static lg::log_domain log_network("network");
 #define ERR_NET LOG_STREAM(err , log_network)
 #define LOG_NET LOG_STREAM(info, log_network)
+
+static lg::log_domain log_ad("addons");
+#define DBG_AD LOG_STREAM(debug, log_ad)
+#define LOG_AD LOG_STREAM(info, log_ad)
+#define ERR_AD LOG_STREAM(err, log_ad)
 
 void get_addon_info(const std::string& addon_name, config& cfg)
 {
@@ -109,14 +115,16 @@ std::vector<std::string> available_addons()
 	std::vector<std::string> files, dirs;
 	const std::string parentd = get_addon_campaigns_dir();
 	get_files_in_dir(parentd,&files,&dirs);
-
+	DBG_AD << "Addons directory: " << parentd;
 	for(std::vector<std::string>::const_iterator i = dirs.begin(); i != dirs.end(); ++i) {
+	        DBG_AD << "Found possible addon: " << *i;
 		const std::string external_cfg_file = *i + ".cfg";
 		const std::string internal_cfg_file = *i + "/_main.cfg";
 		const std::string external_pbl_file = *i + ".pbl";
 		const std::string internal_pbl_file = *i + "/_server.pbl";
 		if((std::find(files.begin(),files.end(),external_cfg_file) != files.end() || file_exists(parentd + "/" + internal_cfg_file)) &&
 		   (std::find(files.begin(),files.end(),external_pbl_file) != files.end() || (file_exists(parentd + "/" + internal_pbl_file)))) {
+                        DBG_AD << "Got addon: " << *i << "\n";
 			res.push_back(*i);
 		}
 	}
@@ -525,7 +533,7 @@ namespace {
 		return true;
 	}
 
-	void upload_addon_to_server(game_display& disp, const std::string& addon, network::connection sock)
+	void upload_addon_to_server(game_display& disp, const std::string& addon, network::addon_client& ac)
 	{
 		//Get credentials
 		std::string login_error_message;
@@ -551,25 +559,27 @@ namespace {
 			data.add_child("upload",pbl).add_child("data",addon_data);
 
 			LOG_NET << "uploading add-on...\n";
-
-			//Upload
-			//TODO addon_client passed to this function from outside
-			//with base url already set!
-			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons/");
-			try
+			
+			//Async publish
+			network::progress_data pd;
+			ac.async_publish_addon(pd, data, login, password);
+			gui2::tnetwork_progress dialog;
+			dialog.set_progress_object(pd);
+			dialog.show(disp.video());
+			assert(!pd.running());
+			if (pd.abort()) 
 			{
-				ac.publish_addon(data, login, password);
+				//User clicked abort, maybe handle this more gracefully?
+				return;
 			}
-			catch(network::addon_client_error e)
-			{
-				gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
-					std::string(e.what()) + '"');
-			}
+			
+			std::string response = ac.get_async_response();
+			//TODO: parse response and show a dialog
+			//"yay, published" or "oops, wrong credentials" etc
 		}
 	}
 
-	void delete_remote_addon(game_display& disp, const std::string& addon, network::connection sock)
+	void delete_remote_addon(game_display& disp, const std::string& addon, network::addon_client& ac)
 	{
 		//Get credentials
 		std::string login_error_message;
@@ -581,19 +591,19 @@ namespace {
 			std::string login = preferences::login();
 			std::string password = preferences::password();
 
-			//TODO addon_client passed to this function from outside
-			//with base url already set!
-			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons/");
-			try
+			//Async remove
+			network::progress_data pd;
+			ac.async_delete_remote_addon(pd, addon, login, password);
+			gui2::tnetwork_progress dialog;
+			dialog.set_progress_object(pd);
+			dialog.show(disp.video());
+			assert(!pd.running());
+			if (pd.abort()) 
 			{
-				ac.delete_remote_addon(addon, login, password);
+				//User clicked abort, maybe handle this more gracefully?
+				return;
 			}
-			catch(network::addon_client_error e)
-			{
-				gui2::show_error_message(disp.video(), _("The server responded with an error: \"") +
-					std::string(e.what()) + '"');
-			}
+			std::string response = ac.get_async_response();
 		}
 		
 	}
@@ -603,7 +613,7 @@ namespace {
 	                   const std::string& addon_type_str, const std::string& addon_uploads_str,
 	                   const std::string& addon_version_str,
 	                   const network::manager& /*net_manager*/,
-	                   const network::connection& sock, bool* do_refresh,
+					   network::addon_client& ac, bool* do_refresh,
 	                   bool show_result = true)
 	{
 		// Get all dependencies of the addon/campaign selected for download.
@@ -618,9 +628,21 @@ namespace {
 		utils::string_map syms;
 		syms["addon_title"] = addon_title;
 
-		network::addon_client ac;
-		ac.set_base_url("http://localhost:8000/addons/");
-		config cfg = ac.get_addon_cfg(addon_id);
+		//Async remove
+		network::progress_data pd;
+		ac.async_get_addon(pd, addon_id);
+		gui2::tnetwork_progress dialog;
+		dialog.set_progress_object(pd);
+		dialog.show(disp.video());
+		assert(!pd.running());
+		if (pd.abort()) 
+		{
+			//User clicked abort, maybe handle this more gracefully?
+			return false;
+		}
+		std::string addon_string = ac.get_async_response();
+		config cfg;
+		read(cfg, addon_string);
 
 		if (config const &dlerror = cfg.child("error")) {
 			gui2::show_error_message(disp.video(), dlerror["message"]);
@@ -712,7 +734,7 @@ namespace {
 	}
 
 	void addons_update_dlg(game_display &disp, config &cfg, const config::const_child_itors &remote_addons_list,
-	                       const network::manager& net_manager, const network::connection& sock,
+	                       const network::manager& net_manager, network::addon_client& ac,
 	                       bool* do_refresh)
 	{
 		std::vector<const config *> remote_matches_cfgs;
@@ -889,7 +911,7 @@ namespace {
 			for(size_t i = 0; i < addons.size() && i < remote_matches_cfgs.size(); ++i)
 			{
 				if (!install_addon(disp, cfg.child("campaigns"), addons[i], titles[i],
-				                   types[i], uploads[i], newversions[i], net_manager, sock,
+				                   types[i], uploads[i], newversions[i], net_manager, ac,
 				                   do_refresh, false)) {
 					result=false;
 					failed_titles.push_back(titles[i]);
@@ -898,7 +920,7 @@ namespace {
 		} else {
 			const size_t i = static_cast<size_t>(index);
 			if (!install_addon(disp, cfg.child("campaigns"), addons[i], titles[i],
-				               types[i], uploads[i], newversions[i], net_manager, sock,
+				               types[i], uploads[i], newversions[i], net_manager, ac,
 				               do_refresh, false)) {
 				result=false;
 				failed_titles.push_back(titles[i]);
@@ -946,12 +968,30 @@ namespace {
 
 		try {
 			const network::manager net_manager;
-			network::connection sock; //left for compilability ;p
+			//network::connection sock; //left for compilability ;p
 			
 			//New addon client code goes here for testing
+			network::progress_data pd;
 			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons/");
-			config cfg = ac.get_addon_list_cfg();
+			ac.set_base_url(remote_address);
+			ac.async_get_addon_list(pd);
+			gui2::tnetwork_progress dialog;
+			dialog.set_progress_object(pd);
+			dialog.show(disp.video());
+			ac.async_wait();
+			assert(!pd.running());
+			if (pd.abort()) 
+			{
+				return;
+			}
+			
+			std::string addon_lst = ac.get_async_response();
+			config cfg;
+			read(cfg, addon_lst);
+			if (config const &dlerror = cfg.child("error")) {
+				gui2::show_error_message(disp.video(), dlerror["message"]);
+				return;
+			}
 			//Old code again
 
 			config const &addons_tree = cfg.child("campaigns");
@@ -962,7 +1002,7 @@ namespace {
 
 			const config::const_child_itors &addon_cfgs = addons_tree.child_range("campaign");
 			if(update_mode) {
-				addons_update_dlg(disp, cfg, addon_cfgs, net_manager, sock, do_refresh);
+				addons_update_dlg(disp, cfg, addon_cfgs, net_manager, ac, do_refresh);
 				return;
 			}
 
@@ -1107,20 +1147,20 @@ namespace {
 			// Handle deletion option
 			if(index >= int(addons.size() + publish_options.size())) {
 				const std::string& addon = delete_options[index - int(addons.size() + publish_options.size())];
-				delete_remote_addon(disp, addon, sock);
+				delete_remote_addon(disp, addon, ac);
 				return;
 			}
 
 			// Handle publish option
 			if(index >= int(addons.size())) {
 				const std::string& addon = publish_options[index - int(addons.size())];
-				upload_addon_to_server(disp, addon, sock);
+				upload_addon_to_server(disp, addon, ac);
 				return;
 			}
 
 			// Handle download
 			install_addon(disp, addons_tree, addons[index], titles[index], types[index],
-			              uploads[index], versions[index], net_manager, sock, do_refresh);
+			              uploads[index], versions[index], net_manager, ac, do_refresh);
 
 			// Show the dialog again, and position it on the same item installed
 			download_addons(disp, remote_address, update_mode, do_refresh, index);

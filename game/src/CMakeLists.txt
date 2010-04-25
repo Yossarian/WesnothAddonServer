@@ -62,6 +62,7 @@ set( game-external-libs
     ${LUA_LIBRARIES}
     ${LIBDBUS_LIBRARIES}
     ${CURL_LIBRARIES}
+    ${Boost_THREAD_LIBRARY}
 )
 
 set( server-external-libs
@@ -297,6 +298,7 @@ set(wesnoth-main_SRC
     gui/dialogs/mp_create_game.cpp
     gui/dialogs/mp_method_selection.cpp
     gui/dialogs/mp_cmd_wrapper.cpp
+    gui/dialogs/network_progress.cpp
     gui/dialogs/title_screen.cpp
     gui/dialogs/transient_message.cpp
     gui/dialogs/unit_create.cpp

@@ -71,6 +71,7 @@ enum twindow_type {
 	UNIT_CREATE,			 /**< Debug-mode unit creation dialog */
 	FORMULA_DEBUGGER,         /**< Formula debugger dialog */
 	GAMESTATE_INSPECTOR,      /**< Visual inspector of the game state (WML variables, events)*/
+	NETWORK_PROGRESS,         /**< Network transfer progress dialog with abort functionality */
 	COUNT                    /**<
 	                          * The last one to hold the number of items and as
 	                          * sentinel.
