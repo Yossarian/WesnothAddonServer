@@ -965,10 +965,8 @@ namespace {
 			}
 			
 			std::string addon_lst = ac.get_async_response();
-			std::cerr << "addon_lst: " << addon_lst <<"\n/addon_lst\n";
 			config cfg;
-			read(cfg, addon_lst);			
-			std::cerr << "cfg: " << cfg <<"\n/cfg\n";
+			read(cfg, addon_lst);
 			if (config const &dlerror = cfg.child("error")) {
 				gui2::show_error_message(disp.video(), dlerror["message"]);
 				return;
