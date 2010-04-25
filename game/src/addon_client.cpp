@@ -85,7 +85,7 @@ std::string addon_client::get_response(std::string url,
 		//set post body
 		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params_str.c_str()));
 	}
-	else //GET
+	else if(!params.str().empty())//GET
 	{
 		//just slap the params to the url
 		url += std::string("?") + params.str();
@@ -132,11 +132,9 @@ std::string addon_client::get_addon_description(unsigned int addon_id)
 std::string addon_client::get_addon_list()
 {
 	std::ostringstream address;
-	address <<base_url_;//<<"?simple_iface";
-	string_map_t args;
-	args["simple_iface"] = "1";
+	address << base_url_ <<"?simple_iface";
 
-	return get_response(address.str(), args);;
+	return get_response(address.str());;
 }
 
 size_t addon_client::default_recv_callback
