@@ -131,6 +131,7 @@ def check_pbl(pbl_data):
 	num = 0
 	for l in pbl_data:
 		num += 1
+		l = l.strip()
 		m = re.match(r"^(.*)=\"(.*)\"$", l)
 		if m == None:
 			raise Exception('Line '+str(num)+' is invalid')
