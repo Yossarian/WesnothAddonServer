@@ -216,7 +216,7 @@ def publish(request):
 	decoded_wml = cs.decode(file_data)
 
   	for field in ["title", "author", "description", "version", "icon", "type"]:
-		keys_vals[field] = decoded_wml.get_text_val(field)
+		keys_vals[field] = decoded_wml.get_text_val(field).strip()
 		if keys_vals[field] == None:
 			raise Exception("WML key error (PBL IN WML)")
 
