@@ -117,6 +117,8 @@ void addon_client::set_base_url(std::string base_url)
 {
 	//TODO trailing slash bulletproofing
 	base_url_ = base_url;
+	if(base_url_[base_url_.length()-1] != '/')
+		base_url_.push_back('/');
 }
 
 std::string addon_client::get_addon_description(unsigned int addon_id)
