@@ -26,8 +26,16 @@
 #include "gui/widgets/settings.hpp"
 #include "gui/widgets/scroll_label.hpp"
 #include "gui/widgets/toggle_button.hpp"
+#include "log.hpp"
 
 #include <boost/bind.hpp>
+
+#include <iomanip>
+#include <sstream>
+
+static lg::log_domain log_network("network");
+#define ERR_NET LOG_STREAM(err , log_network)
+#define LOG_NET LOG_STREAM(info, log_network)
 
 namespace gui2 {
 
@@ -84,7 +92,28 @@ void tnetwork_progress::poll_progress(twindow& window)
 {
 	if (!pd_->running()) {
 		window.close();
-	}
+        } else {
+                tlabel* progress = dynamic_cast<tlabel*>(window.find("progress", false));
+                assert(progress);
+                double total = pd_->total();
+                double done = pd_->done();
+                std::stringstream ss;
+                if (total > 0) {
+                    double percent = (total > 0) ? (done / total) : 0;
+                    percent *= 100;
+                    ss << done << "/" << total << "( " << std::setprecision(1) << percent << ")";
+                } else {
+                    if (done == 0) {
+                        ss << "...";
+                    } else {
+                        ss << done;
+                    }
+                }
+                LOG_NET << ss.str() << "\n";
+                progress->set_label(ss.str());
+                window.invalidate_layout();
+        }
+
 }
 
 void tnetwork_progress::abort(twindow& window)
