@@ -551,7 +551,7 @@ void play_music_config(const config &music_node)
 		}
 	}
 	else if(track.id().empty() == false) {
-		ERR_AUDIO << "cannot open track '" << track.id() << "'; disabled in this playlist.\n";
+		LOG_AUDIO << "cannot open track '" << track.id() << "'; disabled in this playlist.\n";
 	}
 
 	// They can tell us to start playing this list immediately.

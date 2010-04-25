@@ -1,9 +1,16 @@
 #include "addon_client.hpp"
 #include "foreach.hpp"
+#include "log.hpp"
 #include "serialization/parser.hpp"
 #include <boost/bind.hpp>
 #include <boost/thread/thread.hpp>
+#include <fstream>
 #include <sstream>
+
+static lg::log_domain log_ac("addonclient");
+#define DBG_AC LOG_STREAM(debug, log_ac)
+#define LOG_AC LOG_STREAM(info, log_ac)
+#define ERR_AC LOG_STREAM(err, log_ac) 
 
 namespace network {
 
@@ -67,15 +74,16 @@ std::string addon_client::get_response(std::string url,
 {
 	//convert arguments to an encoded string like key=value?other+key=1
 	std::ostringstream params;
-	for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++)
+	for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
 		params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
-
-
+		LOG_AC << params.str();
+	}
+	std::string params_str = params.str();
 	if(post)
 	{
 		curl_easy_setopt(handle_, CURLOPT_POST, 1);
 		//set post body
-		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params.str().c_str()));
+		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params_str.c_str()));
 	}
 	else //GET
 	{
@@ -92,6 +100,9 @@ std::string addon_client::get_response(std::string url,
 
 	//execute
 	flush();
+	DBG_AC << buffer;
+	std::ofstream ofs("last_get.html");
+	ofs << buffer;
 	return buffer;
 }
 
