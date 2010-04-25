@@ -23,6 +23,8 @@ urlpatterns = patterns('',
 	(r'^admin/wescamp-update/$', 'addons.views.adminWescampUpdate'),
 	(r'^test_media/(?P<path>.*)$', 'django.views.static.serve',
 		{'document_root': './test_media'}),
+	(r'^icons/(?P<path>.*)$', 'django.views.static.serve',
+		{'document_root': '../game/data/core/images'}),
 	(r'^$', 'django.views.generic.simple.redirect_to', {'url': 'addons/'})
 
 )
