@@ -7,10 +7,10 @@
 #include <fstream>
 #include <sstream>
 
-static lg::log_domain log_ac("addonclient");
-#define DBG_AC LOG_STREAM(debug, log_ac)
-#define LOG_AC LOG_STREAM(info, log_ac)
-#define ERR_AC LOG_STREAM(err, log_ac) 
+static lg::log_domain log_ad("addons");
+#define DBG_AD LOG_STREAM(debug, log_ad)
+#define LOG_AD LOG_STREAM(info, log_ad)
+#define ERR_AD LOG_STREAM(err, log_ad) 
 
 namespace network {
 
@@ -76,7 +76,7 @@ std::string addon_client::get_response(std::string url,
 	std::ostringstream params;
 	for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
 		params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
-		LOG_AC << params.str();
+		LOG_AD << params.str();
 	}
 	std::string params_str = params.str();
 	if(post)
@@ -100,7 +100,7 @@ std::string addon_client::get_response(std::string url,
 
 	//execute
 	flush();
-	DBG_AC << buffer;
+	DBG_AL << buffer;
 	std::ofstream ofs("last_get.html");
 	ofs << buffer;
 	return buffer;

@@ -54,6 +54,11 @@ static lg::log_domain log_network("network");
 #define ERR_NET LOG_STREAM(err , log_network)
 #define LOG_NET LOG_STREAM(info, log_network)
 
+static lg::log_domain log_ad("addons");
+#define DBG_AD LOG_STREAM(debug, log_ad)
+#define LOG_AD LOG_STREAM(info, log_ad)
+#define ERR_AD LOG_STREAM(err, log_ad)
+
 void get_addon_info(const std::string& addon_name, config& cfg)
 {
 	const std::string parentd = get_addon_campaigns_dir();
@@ -110,14 +115,16 @@ std::vector<std::string> available_addons()
 	std::vector<std::string> files, dirs;
 	const std::string parentd = get_addon_campaigns_dir();
 	get_files_in_dir(parentd,&files,&dirs);
-
+	DBG_AD << "Addons directory: " << parentd;
 	for(std::vector<std::string>::const_iterator i = dirs.begin(); i != dirs.end(); ++i) {
+	        DBG_AD << "Found possible addon: " << *i;
 		const std::string external_cfg_file = *i + ".cfg";
 		const std::string internal_cfg_file = *i + "/_main.cfg";
 		const std::string external_pbl_file = *i + ".pbl";
 		const std::string internal_pbl_file = *i + "/_server.pbl";
 		if((std::find(files.begin(),files.end(),external_cfg_file) != files.end() || file_exists(parentd + "/" + internal_cfg_file)) &&
 		   (std::find(files.begin(),files.end(),external_pbl_file) != files.end() || (file_exists(parentd + "/" + internal_pbl_file)))) {
+                        DBG_AD << "Got addon: " << *i << "\n";
 			res.push_back(*i);
 		}
 	}
@@ -948,7 +955,7 @@ namespace {
 			gui2::tnetwork_progress dialog;
 			dialog.set_progress_object(pd);
 			dialog.show(disp.video());
-			//ac.async_wait();
+			ac.async_wait();
 			assert(!pd.running());
 			if (pd.abort()) 
 			{
