@@ -32,7 +32,7 @@
 namespace gui2 {
 
 tnetwork_progress::tnetwork_progress()
-	: pd_(NULL)
+	: pd_(NULL), poll_progress_timer_(0)
 {
 }
 
@@ -40,6 +40,7 @@ tnetwork_progress::~tnetwork_progress()
 {
         if(poll_progress_timer_) {
         	remove_timer(poll_progress_timer_);
+        	poll_progress_timer_ = 0;
 	}
 }
 
@@ -73,6 +74,10 @@ void tnetwork_progress::pre_show(CVideo& video, twindow& window)
 
 void tnetwork_progress::post_show(twindow& /*window*/)
 {
+        if(poll_progress_timer_) {
+                remove_timer(poll_progress_timer_);
+                poll_progress_timer_ = 0;
+        }
 }
 
 void tnetwork_progress::poll_progress(twindow& window)
