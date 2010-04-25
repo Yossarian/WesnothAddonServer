@@ -526,7 +526,7 @@ namespace {
 		return true;
 	}
 
-	void upload_addon_to_server(game_display& disp, const std::string& addon, network::connection sock)
+	void upload_addon_to_server(game_display& disp, const std::string& addon, network::addon_client& ac)
 	{
 		//Get credentials
 		std::string login_error_message;
@@ -553,11 +553,6 @@ namespace {
 
 			LOG_NET << "uploading add-on...\n";
 
-			//Upload
-			//TODO addon_client passed to this function from outside
-			//with base url already set!
-			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons/");
 			try
 			{
 				ac.publish_addon(data, login, password);
@@ -570,7 +565,7 @@ namespace {
 		}
 	}
 
-	void delete_remote_addon(game_display& disp, const std::string& addon, network::connection sock)
+	void delete_remote_addon(game_display& disp, const std::string& addon, network::addon_client& ac)
 	{
 		//Get credentials
 		std::string login_error_message;
@@ -582,10 +577,6 @@ namespace {
 			std::string login = preferences::login();
 			std::string password = preferences::password();
 
-			//TODO addon_client passed to this function from outside
-			//with base url already set!
-			network::addon_client ac;
-			ac.set_base_url("http://localhost:8000/addons/");
 			try
 			{
 				ac.delete_remote_addon(addon, login, password);
@@ -965,10 +956,8 @@ namespace {
 			}
 			
 			std::string addon_lst = ac.get_async_response();
-			std::cerr << "addon_lst: " << addon_lst <<"\n/addon_lst\n";
 			config cfg;
-			read(cfg, addon_lst);			
-			std::cerr << "cfg: " << cfg <<"\n/cfg\n";
+			read(cfg, addon_lst);
 			if (config const &dlerror = cfg.child("error")) {
 				gui2::show_error_message(disp.video(), dlerror["message"]);
 				return;
@@ -1128,14 +1117,14 @@ namespace {
 			// Handle deletion option
 			if(index >= int(addons.size() + publish_options.size())) {
 				const std::string& addon = delete_options[index - int(addons.size() + publish_options.size())];
-				delete_remote_addon(disp, addon, sock);
+				delete_remote_addon(disp, addon, ac);
 				return;
 			}
 
 			// Handle publish option
 			if(index >= int(addons.size())) {
 				const std::string& addon = publish_options[index - int(addons.size())];
-				upload_addon_to_server(disp, addon, sock);
+				upload_addon_to_server(disp, addon, ac);
 				return;
 			}
 

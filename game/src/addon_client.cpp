@@ -81,6 +81,7 @@ std::string addon_client::get_response(std::string url,
 	std::string params_str = params.str();
 	if(post)
 	{
+		curl_easy_setopt(handle_, CURLOPT_POST, 1);
 		//set post body
 		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params_str.c_str()));
 	}
@@ -116,6 +117,8 @@ void addon_client::set_base_url(std::string base_url)
 {
 	//TODO trailing slash bulletproofing
 	base_url_ = base_url;
+	if(base_url_[base_url_.length()-1] != '/')
+		base_url_.push_back('/');
 }
 
 std::string addon_client::get_addon_description(unsigned int addon_id)
@@ -314,8 +317,9 @@ void addon_client::async_wait()
 	thread_.join();
 }
 
-std::string addon_client::get_async_response() const
+std::string addon_client::get_async_response()
 {
+	async_wait();
 	return async_response_buffer_;
 }
 
