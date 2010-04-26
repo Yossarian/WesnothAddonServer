@@ -9,7 +9,9 @@ class Author(models.Model):
 
 class AddonType(models.Model):
 	type_name = models.CharField(max_length=200, unique=True)
-
+	display_name = models.CharField(max_length=200)
+	def get_name(self):
+		return self.display_name
 	def __unicode__(self):
 		return self.type_name
 

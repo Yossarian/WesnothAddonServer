@@ -74,7 +74,7 @@
 						<h3>{{addon.name}}</h3>
 						<ul>
 							<li><b>Version:</b> {{addon.ver}}
-							<li><b>Type:</b> {{addon.type}}
+							<li><b>Type:</b> {{addon.type.get_name}}
 							{% if addon.file_size %}
 							<li><b>Size:</b> {{addon.file_tbz.size|filesizeformat}}
 							{% else %}

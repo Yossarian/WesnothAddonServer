@@ -35,7 +35,7 @@ var zzfg = new domFunction(function() {
 {% for name in addon_list_s %}
 {% for addon in name.list %}
 <tr {% cycle 'class="alternate"' '' %}>
-	<td>{{addon.type}}</td>
+	<td>{{addon.type.get_name}}</td>
 	
 	<td><span style="display:none">{{addon.name}}</span>
 	<a href="{% url addons.views.details addon.id %}">
