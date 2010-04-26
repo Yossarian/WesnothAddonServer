@@ -1,0 +1,26 @@
+{% autoescape off %}
+[campaigns]
+timestamp={{ timestamp }}
+total={{ addons|length }}
+{% for addon in addons %}
+[campaign]
+	remote_id={{ addon.id }}
+	author={{ addon.authors.all|join:', ' }}
+	dependencies=
+	description={{ addon.desc }}
+	downloads={{ addon.downloads }}
+	filename={{ addon.filename }}
+	icon={{ addon.img }}
+	name={{ addon.name }}
+	rating={{ addon.get_rating }}
+	size={{ addon.size }}
+	timestamp={{ addon.timestamp }}
+	title={{ addon.name }}
+	translate=false
+	uploads={{ addon.uploads }}
+	version={{ addon.ver }}
+	type={{ addon.type }}
+[/campaign]
+{% endfor %}
+[/campaigns]
+{% endautoescape %}

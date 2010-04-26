@@ -71,17 +71,18 @@ class CampaignClient:
         self.canceled = True
 
     def __del__(self):
+        pass
         #if self.canceled:
         #    sys.stderr.write("Canceled socket.\n")
         #elif self.error:
         #    sys.stderr.write("Unexpected disconnection.\n")
         #else:
         #    sys.stderr.write("Closing socket.\n")
-        if self.sock:
-            try:
-                self.sock.shutdown(2)
-            except socket.error:
-                pass # Well, what can we do?
+        #if self.sock:
+        #    try:
+        #        self.sock.shutdown(2)
+        #    except socket.error:
+        #        pass # Well, what can we do?
 
 
     def make_packet(self, doc):
@@ -277,17 +278,17 @@ class CampaignClient:
         #return self.decode(self.read_packet())
         return None
 
-    def change_passphrase(self, name, old, new):
-        """
-        Changes the passphrase of a campaign on the server.
-        """
-        request = wmldata.DataSub("change_passphrase")
-        request.set_text_val("name", name)
-        request.set_text_val("passphrase", old)
-        request.set_text_val("new_passphrase", new)
+#    def change_passphrase(self, name, old, new):
+#        """
+#        Changes the passphrase of a campaign on the server.
+#        """
+#        request = wmldata.DataSub("change_passphrase")
+#        request.set_text_val("name", name)
+#        request.set_text_val("passphrase", old)
+#        request.set_text_val("new_passphrase", new)
 
-        self.send_packet(self.make_packet(request))
-        return self.decode(self.read_packet())
+#        self.send_packet(self.make_packet(request))
+#        return self.decode(self.read_packet())
 
     def get_campaign_raw(self, id):
         """

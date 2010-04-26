@@ -28,7 +28,10 @@ logger.addHandler(handler)
 
 def index(request):
 	if 'wml' in request.GET:
-		return addonListText()
+		t = datetime.now()
+		timestamp=str(int(time.mktime(t.timetuple())))
+		return render_to_response('addons/addonList.wml',
+			{'addons':addonList(), 'timestamp':timestamp})
 	else:
 		addon_list = Addon.objects.all().order_by('-name')
 		for addon in addon_list:
@@ -39,15 +42,22 @@ def index(request):
 		return render_to_response('addons/addonList.html', {'addon_list': addon_list})
 	
 
-def addonListText():
-	sAddonList = '[campaigns]\n'
-	t = datetime.now()
-	sAddonList += 'timestamp='+str(int(time.mktime(t.timetuple())))+'\n'
-	sAddonList += 'total='+str(Addon.objects.all().count())+'\n'
+def addonList():
+	addons = []
+
 	for addon in Addon.objects.all():
-		sAddonList += detailsText(addon)
-	sAddonList += '[/campaigns]\n'
-	return HttpResponse(sAddonList)
+		try:
+			addon.filename = str(addon.file_wml)[7:]
+			addon.size = str(addon.file_wml.size)
+
+			t = addon.lastUpdate
+			addon.timestamp = str(int(time.mktime(t.timetuple())))
+
+			addons.append(addon)
+		except (IOError, ValueError, OSError):
+			pass
+
+	return addons
 
 def details(request, addon_id):
 	try:
@@ -62,29 +72,6 @@ def details(request, addon_id):
 		return HttpResponse(detailsText(addon))
 	else:
 		return render_to_response('addons/details.html', {'addon': addon})
-
-def detailsText(addon):
-	sDesc = '[campaign]\n'
-	sDesc += 'remote_id='+str(addon.id)+'\n' #not used in current game implementation
-	sDesc += 'author='+", ".join(map(lambda a: a.name, addon.authors.all()))+'\n'
-	sDesc += 'dependencies=\n' #TODO do something with dependencies maybe?
-	sDesc += 'description='+addon.desc+'\n'
-	sDesc += 'downloads='+str(addon.downloads)+'\n'
-	sDesc += 'filename='+str(addon.file_wml)[7:]+'\n' #cut for addons/
-	sDesc += 'icon='+addon.img+'\n'
-	sDesc += 'name='+addon.name+'\n'
-	sDesc += 'rating='+str(addon.get_rating())+'\n' #not used in current game implementation
-	sDesc += 'size='+str(addon.file_wml.size)+'\n'
-	t = addon.lastUpdate
-	sDesc += 'timestamp='+str(int(time.mktime(t.timetuple())))+'\n'
-	sDesc += 'title='+addon.name+'\n'
-	sDesc += 'translate=false\n' #TODO translate bool field?
-	sDesc += 'uploads='+str(addon.uploads)+'\n'
-	sDesc += 'version='+addon.ver+'\n'
-	sDesc += 'type='+str(addon.type)+'\n' #Warning: see http://wiki.wesnoth.org/PblWML#type for allowed valuesW
-	sDesc += '[/campaign]\n'
-	#TODO [translation]
-	return sDesc
 
 def errorText(error_message):
 	#this returns a WML-parsable string describing an error that should be handled by the game well
