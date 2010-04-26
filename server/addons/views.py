@@ -166,9 +166,14 @@ def publish(request):
 								      'errors_pbl' : errors_pbl,
 							              'loginVal' : login})
 
-	def error_response(title, error):
-		return render_to_response('addons/error.html',
-					  {'errorType':title, 'errorDesc':error})
+	if 'wml' in request.GET:
+		def error_response(title, error):
+			return render_to_response('addons/error.wml',
+						  {'errorType':title, 'errorDesc':error})
+	else:
+		def error_response(title, error):
+			return render_to_response('addons/error.html',
+						  {'errorType':title, 'errorDesc':error})
 
 	keys_vals = {}
 	if file_pbl != None:
