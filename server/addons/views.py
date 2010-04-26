@@ -27,7 +27,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 def index(request):
-	if 'simple_iface' in request.GET:
+	if 'wml' in request.GET:
 		return addonListText()
 	else:
 		addon_list = Addon.objects.all().order_by('-name')
@@ -58,7 +58,7 @@ def details(request, addon_id):
 		addon.file_size = addon.file_tbz.size
 	except (IOError, NameError, ValueError):
 		addon.file_size = False
-	if 'simple_iface' in request.GET:
+	if 'wml' in request.GET:
 		return HttpResponse(detailsText(addon))
 	else:
 		return render_to_response('addons/details.html', {'addon': addon})
@@ -111,7 +111,7 @@ def rate(request, addon_id):
 	try:
 		value = int(request.POST['rating'])
 	except (KeyError, ValueError):
-		if 'simple_iface' in request.GET:
+		if 'wml' in request.GET:
 			return HttpResponse("bad rating value")
 		else:
 			return HttpResponseServerError("bad rating value")
@@ -121,7 +121,7 @@ def rate(request, addon_id):
 	r.ip = request.get_host()
 	r.addon = addon
 	r.save()
-	if 'simple_iface' in request.GET:
+	if 'wml' in request.GET:
 		return HttpResponse('success')
 	else:
 		return render_to_response('addons/details.html', {'rated' : True, 'addon_id': addon_id, 'addon': addon, 'rate_val': value})

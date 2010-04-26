@@ -242,7 +242,7 @@ class CampaignClient:
         if self.error:
             return None
 
-        req = urllib2.Request('http://' + self.address + '/addons/?simple_iface')
+        req = urllib2.Request('http://' + self.address + '/addons/?wml')
         response = urllib2.urlopen(req)
         data = response.read()
         return self.decode(data)
