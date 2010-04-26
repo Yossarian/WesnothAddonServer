@@ -34,7 +34,7 @@ def index(request):
 		for addon in addon_list:
 			try:
 				addon.file_size = addon.file_tbz.size
-			except (IOError, ValueError, WindowsError, OSError):
+			except (IOError, ValueError, OSError):
 				addon.file_size = False
 		return render_to_response('addons/addonList.html', {'addon_list': addon_list})
 	
