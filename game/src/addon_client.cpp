@@ -20,6 +20,7 @@ std::runtime_error(why)
 }
 
 addon_client::addon_client(void)
+: error_buffer_()
 {
 	handle_ = curl_easy_init();
 
@@ -101,6 +102,7 @@ std::string addon_client::get_response(std::string url,
 	//execute
 	flush();
 	DBG_AD << buffer;
+
 	std::ofstream ofs("last_get.html");
 	ofs << buffer;
 	return buffer;
@@ -111,6 +113,15 @@ void addon_client::flush()
 	CURLcode error = curl_easy_perform(handle_);
 	if(error != CURLE_OK)
 		throw addon_client_error(error_buffer_);
+	long http_code = 0;
+	curl_easy_getinfo(handle_, CURLINFO_RESPONSE_CODE, &http_code);
+	if (http_code == 404) {
+		throw addon_client_error("Not found");
+	} else if (http_code == 500) {
+		throw addon_client_error("Server error");
+	} else if (http_code != 200) {
+		throw addon_client_error("Server response not recognized");
+	}
 }
 
 void addon_client::set_base_url(std::string base_url)
