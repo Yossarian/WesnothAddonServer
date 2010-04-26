@@ -124,7 +124,7 @@ void addon_client::set_base_url(std::string base_url)
 std::string addon_client::get_addon_description(unsigned int addon_id)
 {
 	std::ostringstream address;
-	address <<base_url_<< "details/" << addon_id <<"/?simple_iface";
+	address <<base_url_<< "details/" << addon_id <<"/?wml";
 	
 	return get_response(address.str());
 }
@@ -132,7 +132,7 @@ std::string addon_client::get_addon_description(unsigned int addon_id)
 std::string addon_client::get_addon_list()
 {
 	std::ostringstream address;
-	address << base_url_ <<"?simple_iface";
+	address << base_url_ <<"?wml";
 
 	return get_response(address.str());;
 }
