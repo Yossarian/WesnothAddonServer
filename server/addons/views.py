@@ -56,7 +56,7 @@ def details(request, addon_id):
 		raise Http404
 	try:
 		addon.file_size = addon.file_tbz.size
-	except (IOError, NameError, ValueError):
+	except (IOError, NameError, ValueError, OSError):
 		addon.file_size = False
 	if 'wml' in request.GET:
 		return HttpResponse(detailsText(addon))
