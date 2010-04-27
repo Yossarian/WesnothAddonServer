@@ -574,9 +574,21 @@ namespace {
 			}
 			
 			std::string response = ac.get_async_response();
+			try {
+				config cfg;
+				read(cfg, response);
+				if (config const &dlerror = cfg.child("error")) {
+					gui2::show_error_message(disp.video(), dlerror["message"]);
+					return;
+				}
+			} catch (config::error& e) {
+				gui2::show_error_message(disp.video(), "Unknown response");
+				return;
+			}
+		}
+
 			//TODO: parse response and show a dialog
 			//"yay, published" or "oops, wrong credentials" etc
-		}
 	}
 
 	void delete_remote_addon(game_display& disp, const std::string& addon, network::addon_client& ac)

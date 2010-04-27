@@ -101,21 +101,21 @@ std::string addon_client::get_response(std::string url,
 	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
 
 	//execute
-	flush();
-	DBG_AD << buffer;
-
-	std::ofstream ofs("last_get.html");
-	ofs << buffer;
+	flush(buffer);
 	return buffer;
 }
 
-void addon_client::flush()
+void addon_client::flush(const std::string& buffer)
 {
 	CURLcode error = curl_easy_perform(handle_);
 	if(error != CURLE_OK)
 		throw addon_client_error(error_buffer_);
+	DBG_AD << buffer;
+	std::ofstream ofs("last_get.html");
+	ofs << buffer;
 	long http_code = 0;
 	curl_easy_getinfo(handle_, CURLINFO_RESPONSE_CODE, &http_code);
+	LOG_AD << http_code << "\n";
 	if (http_code == 404) {
 		throw addon_client_error("Not found");
 	} else if (http_code == 500) {
@@ -202,7 +202,7 @@ std::string addon_client::publish_addon(const config& addon, std::string login, 
 	args["wml"] = parsed_config.str();
 
 	std::ostringstream address;
-	address <<base_url_<< "publish/";
+	address <<base_url_<< "publish/?wml";
 	return get_response(address.str(), args, true);
 }
 

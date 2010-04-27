@@ -112,7 +112,7 @@ protected:
 	char error_buffer_[CURL_ERROR_SIZE];
 	std::string async_response_buffer_;
 	boost::thread thread_;
-	void flush();
+	void flush(const std::string& buffer);
 
 	static size_t default_recv_callback(
 		void* buffer, 
