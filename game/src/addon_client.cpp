@@ -52,7 +52,7 @@ std::string addon_client::url_encode(std::string raw_string) const
 	//during any sane use case
 	//optimize only if you really need to
 	std::ostringstream encoded;
-	foreach(char c, raw_string)
+	foreach(unsigned char c, raw_string)
 	{
 		//note: you could just convert /all/ chars to %hex_val and it would be
 		//proper but typically only special chars are escaped in such a way
