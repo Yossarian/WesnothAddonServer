@@ -280,6 +280,12 @@ if __name__ == "__main__":
 
     elif options.upload:
         cs = CampaignClient(address)
+	if os.path.isfile(options.upload) and re.match(r"^.*wml$", options.upload) != None:
+		data = file(options.upload).read()
+		cs.put_raw_campaign(data, options.login, options.password)
+	else:
+		print "argument must be wml file"
+	"""
         if os.path.isdir(options.upload):
             # New style with _server.pbl
             pblfile = os.path.join(options.upload, "_server.pbl")
@@ -337,6 +343,7 @@ if __name__ == "__main__":
 
         for message in mythread.data.find_all("message", "error"):
             print message.get_text_val("message")
+	"""
 
     elif options.update or options.status:
         if options.status:

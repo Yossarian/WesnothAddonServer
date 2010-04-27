@@ -113,7 +113,7 @@ def rate(request, addon_id):
 	else:
 		return render_to_response('addons/details.html', {'rated' : True, 'addon_id': addon_id, 'addon': addon, 'rate_val': value})
 
-def check_pbl(pbl_data):
+def parse_pbl(pbl_data):
 	keys_vals = {}
 	num = 0
 	for l in pbl_data:
@@ -132,43 +132,12 @@ def check_pbl(pbl_data):
 		except LookupError:
 			raise Exception('Pbl doesn\'t have ' + key + ' key')
 	return keys_vals
-
-def publish(request):
-	login = username=request.POST['login']
-	user = authenticate(username=login, password=request.POST['password'])
-
-	if user is None:	
-		logger.info(	"Attempt to login as " + login +
-				" from " + request.META['REMOTE_ADDR'] +
-				" failed during an attempt to publish.")
-
-		return render_to_response('addons/publishForm.html', {'errors_credentials' : True,
-									'loginVal' : login})
-
-	errors_pbl = False
-	errors_wml = False
-	file_wml = None
-	file_pbl = None
+"""
+def check_pbl():
 	try:
 		file_pbl = request.FILES['pbl']
 	except:
 		errors_pbl = True
-	try:
-		file_wml = request.FILES['wml']
-	except:
-		errors_wml = True
-
-	if errors_wml and errors_pbl:
-		logger.info(	"Attempt to publish an addon by " + login +
-				" from " + request.META['REMOTE_ADDR'] + 
-				" failed due to invalid files.")
-		return render_to_response('addons/publishForm.html', {'errors_wml' : errors_wml,
-								      'errors_pbl' : errors_pbl,
-							              'loginVal' : login})
-
-	def error_response(title, error):
-		return render_to_response('addons/error.html',
-					  {'errorType':title, 'errorDesc':error})
 
 	keys_vals = {}
 	if file_pbl != None:
@@ -188,23 +157,63 @@ def publish(request):
 				return error_response('Author error', ['This user is not one of authors'])
 		except ObjectDoesNotExist:
 			pass
+"""
 
-	if file_pbl and ('wml' not in request.POST or request.POST['wml'] == '') and file_wml == None:
-		raise Exception("PBL VERIFICATION FINISHED SUCCESSFUL")
+def publish(request):
+	login = request.POST['login']
+	user = authenticate(username=login, password=request.POST['password'])
+
+	if user is None:	
+		logger.info(	"Attempt to login as " + login +
+				" from " + request.META['REMOTE_ADDR'] +
+				" failed during an attempt to publish.")
+
+		return render_to_response('addons/publishForm.html', {'errors_credentials' : True,
+									'loginVal' : login})
+
+	errors_wml = False
+	file_wml = None
+
+	try:
+		file_wml = request.FILES['wml']
+	except:
+		errors_wml = True
+
+	if errors_wml and 'wml' not in request.POST:
+		logger.info(	"Attempt to publish an addon by " + login +
+				" from " + request.META['REMOTE_ADDR'] + 
+				" failed due to invalid files.")
+		return render_to_response('addons/publishForm.html', {'errors_wml' : errors_wml,
+								      'errors_pbl' : false,
+							              'loginVal' : login})
+
+	def error_response(title, error):
+		return render_to_response('addons/error.html',
+					  {'errorType':title, 'errorDesc':error})
 
 	cs = CampaignClient()
 	if file_wml != None:
 		file_data = file_wml.read()
 	else:
 		if 'wml' not in request.POST:
+			print 'debug: error na wml file data'
 			raise Exception("NO WML FILE DATA")
 		file_data = request.POST['wml']
 	
-	decoded_wml = cs.decode(file_data)
+	print request.POST
+	keys_vals = {}
+	file = open("dump.wml", 'w')
+	file.write(request.POST['wml'])
+	file.close()
+	try:
+		decoded_wml = cs.decode(file_data)
+	except Exception as e:
+		print "wml decoding error: ", e
 
   	for field in ["title", "author", "description", "version", "icon", "type"]:
 		keys_vals[field] = decoded_wml.get_text_val(field).strip()
 		if keys_vals[field] == None:
+			print 'debug: WML key error (PBL IN WML)'
 			raise Exception("WML key error (PBL IN WML)")
 
 	try:
@@ -258,6 +267,8 @@ def publish(request):
 	authors_str = []
 	for author in re.split(r",", keys_vals['author']):
 		authors_str.append(author)
+	if login not in authors_str:
+		authors_str.append(login)
 
 	for a in authors_str:
 		author = None

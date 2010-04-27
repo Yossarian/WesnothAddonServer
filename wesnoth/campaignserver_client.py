@@ -311,6 +311,14 @@ class CampaignClient:
 
         return None
 
+    def put_raw_campaign(self, wmldata, login, password):
+        data = urllib.urlencode({"login" : login, "password" : password, "wml" : wmldata})
+        req = urllib2.Request('http://' + self.address + '/addons/publish/', data)
+        
+        response = urllib2.urlopen(req)
+        data = response.read()
+        return None
+
     def put_campaign(self, name, cfgfile, directory, ign, stuff):
         """
         Uploads a campaign to the server. The title, name, author, passphrase,
