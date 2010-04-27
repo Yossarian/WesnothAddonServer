@@ -6,6 +6,7 @@
 #include <boost/thread/thread.hpp>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 static lg::log_domain log_ad("addons");
 #define DBG_AD LOG_STREAM(debug, log_ad)
@@ -63,7 +64,7 @@ std::string addon_client::url_encode(std::string raw_string) const
 		}
 		else
 		{
-			encoded << '%' << std::hex << int(c);
+			encoded << '%' << std::hex << std::setfill ('0') << std::setw (2)<< int(c);
 		}
 	}
 	return encoded.str();
