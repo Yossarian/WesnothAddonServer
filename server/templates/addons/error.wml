@@ -1,6 +1,6 @@
 {% autoescape off %}
 [error]
     type="{{errorType}}"
-    message="{{errorDesc|join:"\n"}}"
+    message="{{errorDesc}}"
 [/error]
 {% endautoescape %}

@@ -137,12 +137,24 @@ def publish(request):
 	login = username=request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
 
-	if user is None:	
+	if 'wml' in request.GET:
+		def error_response(title, error):
+			return render_to_response('addons/error.wml',
+						  {'errorType':title, 'errorDesc':error})
+	else:
+		def error_response(title, error):
+			return render_to_response('addons/error.html',
+						  {'errorType':title, 'errorDesc':error})
+
+	if user is None:
 		logger.info(	"Attempt to login as " + login +
 				" from " + request.META['REMOTE_ADDR'] +
 				" failed during an attempt to publish.")
 
-		return render_to_response('addons/publishForm.html', {'errors_credentials' : True,
+		if 'wml' in request.GET:
+			return error_response("login fail", "login fail");
+		else:
+			return render_to_response('addons/publishForm.html', {'errors_credentials' : True,
 									'loginVal' : login})
 
 	errors_pbl = False
@@ -165,15 +177,6 @@ def publish(request):
 		return render_to_response('addons/publishForm.html', {'errors_wml' : errors_wml,
 								      'errors_pbl' : errors_pbl,
 							              'loginVal' : login})
-
-	if 'wml' in request.GET:
-		def error_response(title, error):
-			return render_to_response('addons/error.wml',
-						  {'errorType':title, 'errorDesc':error})
-	else:
-		def error_response(title, error):
-			return render_to_response('addons/error.html',
-						  {'errorType':title, 'errorDesc':error})
 
 	keys_vals = {}
 	if file_pbl != None:
