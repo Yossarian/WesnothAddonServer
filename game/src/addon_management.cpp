@@ -556,13 +556,14 @@ namespace {
 
 			//Merge both
 			config data;
-			data.add_child("upload",pbl).add_child("data",addon_data);
+			config& d2 = data.add_child("upload",pbl);
+			d2.add_child("data",addon_data);
 
 			LOG_NET << "uploading add-on...\n";
 			
 			//Async publish
 			network::progress_data pd;
-			ac.async_publish_addon(pd, data, login, password);
+			ac.async_publish_addon(pd, d2, login, password);
 			gui2::tnetwork_progress dialog;
 			dialog.set_progress_object(pd);
 			dialog.show(disp.video());
