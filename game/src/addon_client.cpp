@@ -201,7 +201,7 @@ std::string addon_client::publish_addon(const config& addon, std::string login, 
 	args["wml"] = parsed_config.str();
 
 	std::ostringstream address;
-	address <<base_url_<< "publish/";
+	address <<base_url_<< "publish/?wml";
 	return get_response(address.str(), args, true);
 }
 
