@@ -74,23 +74,35 @@ std::string addon_client::get_response(std::string url,
 		string_map_t arguments,
 		bool post)
 {
-	//convert arguments to an encoded string like key=value?other+key=1
-	std::ostringstream params;
-	for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
-		params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
-		LOG_AD << params.str();
-	}
-	std::string params_str = params.str();
-	if(post)
-	{
-		curl_easy_setopt(handle_, CURLOPT_POST, 1);
-		//set post body
-		curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params_str.c_str()));
-	}
-	else if(!params.str().empty())//GET
-	{
-		//just slap the params to the url
-		url += std::string("?") + params.str();
+	if(post && arguments.find("wml") != arguments.end()) {
+		//assume wml sending means a hueg amount of data and use a more
+		//efficient encoding
+		struct curl_httppost* post = NULL;
+		struct curl_httppost* last = NULL;
+		/* Add name/ptrcontent/contenttype section */
+		for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
+			curl_formadd(&post, &last, CURLFORM_COPYNAME, i->first.c_str(),
+					   CURLFORM_PTRCONTENTS, i->second.c_str(),
+					   CURLFORM_CONTENTSLENGTH, i->second.length(),
+					   CURLFORM_CONTENTTYPE, "text/plain", CURLFORM_END);
+		}
+		curl_easy_setopt(handle_, CURLOPT_HTTPPOST, post);
+	} else {
+		//convert arguments to an encoded string like key=value?other+key=1
+		std::ostringstream params;
+		for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
+			params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
+			LOG_AD << params.str();
+		}
+		std::string params_str = params.str();
+		if (post) {
+			//set post body
+			curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params_str.c_str()));
+			curl_easy_setopt(handle_, CURLOPT_POST, 1);
+		} else if(!params.str().empty()) {
+			//just slap the params to the url
+			url += std::string("?") + params.str();
+		}
 	}
 
 	//setup actual url
@@ -99,6 +111,10 @@ std::string addon_client::get_response(std::string url,
 	//setup data to pass to callback
 	std::string buffer;
 	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
+
+
+
+
 
 	//execute
 	flush(buffer);
