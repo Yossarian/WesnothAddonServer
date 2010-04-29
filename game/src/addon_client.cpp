@@ -15,12 +15,12 @@ static lg::log_domain log_ad("addons");
 
 namespace network {
 
-addon_client_error::addon_client_error(std::string why) :
+addon_client_error::addon_client_error(const std::string& why) :
 std::runtime_error(why)
 {
 }
 
-addon_client::addon_client(void)
+addon_client::addon_client()
 : error_buffer_()
 {
 	handle_ = curl_easy_init();
@@ -41,12 +41,12 @@ addon_client::addon_client(void)
 	curl_easy_setopt(handle_, CURLOPT_FOLLOWLOCATION, true);
 }
 
-addon_client::~addon_client(void)
+addon_client::~addon_client()
 {
 	curl_easy_cleanup(handle_);
 }
 
-std::string addon_client::url_encode(std::string raw_string) const
+std::string addon_client::url_encode(const std::string& raw_string) const
 {
 	//this may be slow but it shouldn't become a bottleneck
 	//during any sane use case
@@ -70,8 +70,14 @@ std::string addon_client::url_encode(std::string raw_string) const
 	return encoded.str();
 }
 
-std::string addon_client::get_response(std::string url, 
-		string_map_t arguments,
+std::string addon_client::get_response(const std::string &url)
+{
+	string_map_t arguments;
+	return get_response(url, arguments);
+}
+
+std::string addon_client::get_response(std::string url,
+		const string_map_t& arguments,
 		bool post)
 {
 	if(post && arguments.find("wml") != arguments.end()) {
@@ -80,7 +86,7 @@ std::string addon_client::get_response(std::string url,
 		struct curl_httppost* post = NULL;
 		struct curl_httppost* last = NULL;
 		/* Add name/ptrcontent/contenttype section */
-		for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
+		for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
 			curl_formadd(&post, &last, CURLFORM_COPYNAME, i->first.c_str(),
 					   CURLFORM_PTRCONTENTS, i->second.c_str(),
 					   CURLFORM_CONTENTSLENGTH, i->second.length(),
@@ -90,7 +96,7 @@ std::string addon_client::get_response(std::string url,
 	} else {
 		//convert arguments to an encoded string like key=value?other+key=1
 		std::ostringstream params;
-		for(string_map_t::iterator i = arguments.begin(); i != arguments.end(); i++) {
+		for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
 			params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
 			LOG_AD << params.str();
 		}
@@ -111,10 +117,6 @@ std::string addon_client::get_response(std::string url,
 	//setup data to pass to callback
 	std::string buffer;
 	curl_easy_setopt(handle_, CURLOPT_WRITEDATA, &buffer);
-
-
-
-
 
 	//execute
 	flush(buffer);
@@ -141,7 +143,7 @@ void addon_client::flush(const std::string& buffer)
 	}
 }
 
-void addon_client::set_base_url(std::string base_url)
+void addon_client::set_base_url(const std::string& base_url)
 {
 	//TODO trailing slash bulletproofing
 	base_url_ = base_url;
@@ -192,7 +194,7 @@ config addon_client::get_addon_cfg(unsigned int addon_id)
 	return get_addon_cfg(id.str());
 }
 
-config addon_client::get_addon_cfg(std::string addon_name)
+config addon_client::get_addon_cfg(const std::string& addon_name)
 {
 	config cfg;
 	std::string wml = get_addon(addon_name);
@@ -200,7 +202,7 @@ config addon_client::get_addon_cfg(std::string addon_name)
 	return cfg;
 }
 
-std::string addon_client::get_addon(std::string addon_name)
+std::string addon_client::get_addon(const std::string& addon_name)
 {
 	std::ostringstream address;
 	address <<base_url_<< "download/" << url_encode(addon_name) <<"/?wml";
@@ -208,7 +210,7 @@ std::string addon_client::get_addon(std::string addon_name)
 }
 
 //bool addon_client::is_addon_valid(const config& pbl, std::string login, std::string pass, std::string& error_message);
-std::string addon_client::publish_addon(const config& addon, std::string login, std::string pass)
+std::string addon_client::publish_addon(const config& addon, const std::string& login, const std::string& pass)
 {
 	std::ostringstream parsed_config;
 	write(parsed_config, addon);
@@ -222,7 +224,7 @@ std::string addon_client::publish_addon(const config& addon, std::string login, 
 	return get_response(address.str(), args, true);
 }
 
-std::string addon_client::delete_remote_addon(std::string addon_name, std::string login, std::string pass)
+std::string addon_client::delete_remote_addon(const std::string& addon_name, const std::string& login, const std::string& pass)
 {
 	string_map_t args;
 	args["login"] = login;
@@ -308,7 +310,7 @@ void addon_client::async_get_addon_list(progress_data& pd)
 	async_wrap(pd, true, f);		
 }
 
-void addon_client::async_get_addon(progress_data& pd, std::string name)
+void addon_client::async_get_addon(progress_data& pd, const std::string& name)
 {
 	boost::function<std::string()> f = boost::bind(&addon_client::get_addon, this, name);
 	async_wrap(pd, true, f);
@@ -317,8 +319,8 @@ void addon_client::async_get_addon(progress_data& pd, std::string name)
 void addon_client::async_publish_addon(
 	progress_data& pd, 
 	const config& addon, 
-	std::string login, 
-	std::string pass)
+	const std::string& login,
+	const std::string& pass)
 {
 	async_wrap(pd, true, boost::bind(
 		&addon_client::publish_addon,
@@ -328,9 +330,9 @@ void addon_client::async_publish_addon(
 
 void addon_client::async_delete_remote_addon(
 	progress_data& pd, 
-	std::string addon_name, 
-	std::string login, 
-	std::string pass)
+	const std::string& addon_name,
+	const std::string& login,
+	const std::string& pass)
 {
 	async_wrap(pd, true, boost::bind(
 		&addon_client::delete_remote_addon, 

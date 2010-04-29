@@ -36,7 +36,9 @@ class addon_client_error :
 	public std::runtime_error
 {
 public:
-	addon_client_error(std::string why);
+	addon_client_error(const std::string& why);
+
+	~addon_client_error() throw() {}
 };
 
 /*
@@ -52,32 +54,34 @@ std::cout<<ac.get_addon_description(2)<<std::endl;
 class addon_client
 {
 public:
-	addon_client(void);
-	~addon_client(void);
+	addon_client();
+	~addon_client();
 
 	//include 'http://' in base_url, ex. http://wesnoth.org/addons/
-	void set_base_url(std::string base_url);
+	void set_base_url(const std::string& base_url);
 
 	//simple versions, will block
 	std::string get_addon_description(unsigned int addon_id);
 	std::string get_addon_list();
 	config get_addon_list_cfg();
-	std::string get_addon(std::string addon_name); 
+	std::string get_addon(const std::string& addon_name);
 	config get_addon_cfg(unsigned int addon_id);
-	config get_addon_cfg(std::string addon_name);
+	config get_addon_cfg(const std::string& addon_name);
 	bool is_addon_valid(
 		const config& pbl, 
-		std::string login, 
-		std::string pass, 
+		const std::string& login,
+		const std::string& pass,
 		std::string& error_message);
+
 	std::string publish_addon(
 		const config& addon, 
-		std::string login, 
-		std::string pass);
+		const std::string& login,
+		const std::string& pass);
+
 	std::string delete_remote_addon(
-		std::string addon_name, 
-		std::string login, 
-		std::string pass);
+		const std::string& addon_name,
+		const std::string& login,
+		const std::string& pass);
 	
 	/*
 	Async versions, won't block and can be aborted. 
@@ -86,17 +90,17 @@ public:
 	Abort by calling progress_data::set_abort(true)
 	*/
 	void async_get_addon_list(progress_data& pd);
-	void async_get_addon(progress_data& pd, std::string name);
+	void async_get_addon(progress_data& pd, const std::string& name);
 	void async_publish_addon(
 		progress_data& pd, 
 		const config& addon, 
-		std::string login, 
-		std::string pass);
+		const std::string& login,
+		const std::string& pass);
 	void async_delete_remote_addon(
 		progress_data& pd, 
-		std::string addon_name, 
-		std::string login, 
-		std::string pass);
+		const std::string& addon_name,
+		const std::string& login,
+		const std::string& pass);
 
 	//waits for the last async_* operation to finish
 	//returns immediately if it's already finished
@@ -137,14 +141,17 @@ protected:
 		bool download,
 		boost::function<std::string (void)> blocking_fun);
 
-        void async_wrap(progress_data& pd, bool down, boost::function<std::string()>);
-        
-        typedef std::map<std::string, std::string> string_map_t;
+		void async_wrap(progress_data& pd, bool down, boost::function<std::string()>);
+
+		typedef std::map<std::string, std::string> string_map_t;
+
 	std::string get_response(std::string url,
-		string_map_t arguments = string_map_t(),
+		const string_map_t& arguments,
 		bool post = false);
 
-	std::string url_encode(std::string raw_string) const;
+	std::string get_response(const std::string& url);
+
+	std::string url_encode(const std::string& raw_string) const;
 };
 
 }
