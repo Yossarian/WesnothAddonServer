@@ -196,7 +196,7 @@ def publish(request):
 				" from " + request.META['REMOTE_ADDR'] + 
 				" failed due to invalid files.")
 		return render_to_response('addons/publishForm.html', {'errors_wml' : errors_wml,
-								      'errors_pbl' : false,
+								      'errors_pbl' : False,
 							              'loginVal' : login})
 
 	cs = CampaignClient()
