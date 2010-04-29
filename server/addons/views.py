@@ -208,10 +208,9 @@ def publish(request):
 			raise Exception("NO WML FILE DATA")
 		file_data = request.POST['wml']
 	
-	print request.POST
 	keys_vals = {}
 	file = open("dump.wml", 'w')
-	file.write(request.POST['wml'])
+	file.write(request.POST['wml'].encode('ascii', 'ignore'))
 	file.close()
 	try:
 		decoded_wml = cs.decode(file_data)
@@ -250,7 +249,7 @@ def publish(request):
 		file_wml.name = addon.name + '.wml'
 	else:
 		file = open(os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".wml", 'w')
-		file.write(file_data)
+		file.write(file_data.encode('ascii', 'ignore'))
 		file.close()
 		file_wml =  "addons/" + addon.name + ".wml"
 		
