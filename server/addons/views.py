@@ -253,7 +253,7 @@ def publish(request):
 	addon.img = keys_vals['icon']
 	
 	icon_path = addon.img.split('/')
-	current_path = MEDIA_ROOT
+	current_path = ICONS_ROOT
 	i = 0
 	while i<len(icon_path) - 1:
 		current_path = os.path.join(current_path, icon_path[i])
