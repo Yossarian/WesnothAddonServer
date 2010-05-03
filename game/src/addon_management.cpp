@@ -716,7 +716,11 @@ namespace {
 			WRN_CFG << "failed to uninstall existing add-on version before installing; add-on may not work properly\n";
 		}
 
-		unarchive_addon(cfg);
+		if (cfg.child("data")) {
+			unarchive_addon(cfg.child("data"));
+		} else {
+			unarchive_addon(cfg);
+		}
 		LOG_CFG << "addon unpacked successfully\n";
 
 		if(show_result) {
