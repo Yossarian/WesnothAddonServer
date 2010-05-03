@@ -102,7 +102,7 @@ def rate(request, addon_id):
 		value = int(request.POST['rating'])
 	except (KeyError, ValueError):
 		if 'wml' in request.GET:
-			return HttpResponse("bad rating value")
+			return wml_error_response("Wrong rating value", "Wrong rating value. This may signal a game version vs. server version mismatch.")
 		else:
 			return HttpResponseServerError("bad rating value")
 	addon = Addon.objects.get(id=addon_id)
@@ -112,7 +112,7 @@ def rate(request, addon_id):
 	r.addon = addon
 	r.save()
 	if 'wml' in request.GET:
-		return HttpResponse('success')
+		return wml_message_response("Rating successful", "Thank you for rating!")
 	else:
 		return render_to_response('addons/details.html', {'rated' : True, 'addon_id': addon_id, 'addon': addon, 'rate_val': value})
 
@@ -178,7 +178,7 @@ def publish(request):
 	if user is None:
 		logger.info("Attempt to login as %s from %s failed during publication"
 			% (login, request.META['REMOTE_ADDR']))
-		return error_response("Error", "Authentication error", errors_credentials=True);
+		return error_response("Authentication error", "Login and/or password incorrect", errors_credentials=True);
 
 	errors_wml = False
 
@@ -206,8 +206,10 @@ def publish(request):
 
 	keys_vals = {}
 	for k in ["title", "author", "description", "version", "icon", "type"]:
-		keys_vals[k] = decoded_wml.get_text_val(k).strip()
-		if keys_vals[k] == None:
+		keys_vals[k] = decoded_wml.get_text_val(k)
+		if not keys_vals[k] is None:
+			keys_vals[k] = keys_vals[k].strip()
+		if keys_vals[k] is None or len(keys_vals[k]) < 1:
 			print 'debug: WML key error (PBL IN WML)'
 			return error_response('WML key error', 'Mandatory key %s missing' % k)
 
@@ -309,10 +311,16 @@ def remove(request, addon_id):
 	if not (errors_permissions or errors_credentials):
 		addon.delete()
 		logger.info("Addon #"+addon_id+"("+addon.name+") deleted by user "+login)
+		if 'wml' in request.GET:
+			return wml_message_response("Addon removed from server", "Addon was successfully removed from server")
 	if (errors_credentials):
 		logger.info("Attempt to login as "+login+" from "+request.META['REMOTE_ADDR']+" failed during an attempt to remove addon #"+addon_id+"("+addon.name+")");
-	if (errors_credentials):
-		logger.info("Attempt to remove addon #"+addon_id+"("+addon.name+") by "+login+" from "+request.META['REMOTE_ADDR']+" failed due to insufficient credentials.");
+		if 'wml' in request.GET:
+			return wml_message_response("Could not remove addon from server", "Login and/or password incorrect")
+	if (errors_permissions):
+		logger.info("Attempt to remove addon #"+addon_id+"("+addon.name+") by "+login+" from "+request.META['REMOTE_ADDR']+" failed due to insufficient permissions.");
+		if 'wml' in request.GET:
+			return wml_message_response("Could not remove addon from server", "You don't have permission to remove this addon")
 	return render_to_response('addons/confirmRemove.html',
 							  {'addon_id':addon_id,
 							   'addon': addon, 'errors_credentials':errors_credentials,
