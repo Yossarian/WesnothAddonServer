@@ -1,6 +1,5 @@
-{% autoescape off %}
-[message]
-    type="{{msgType}}"
+{% autoescape off %}[message]
+    type="{{msgTitle}}"
     message="{{msgText}}"
 [/message]
 {% endautoescape %}
