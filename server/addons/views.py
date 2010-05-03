@@ -26,6 +26,14 @@ formatter = logging.Formatter(LOG_MSG_FORMAT)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+def wml_error_response(title, error):
+	return render_to_response('addons/error.wml',
+		{'errorType':title, 'errorDesc':error})
+		
+def wml_message_response(title, message):
+	return render_to_response('addons/message.wml',
+		{'msgTitle':title, 'msgText':message})
+
 def index(request):
 	if 'wml' in request.GET:
 		t = datetime.now()
@@ -72,14 +80,6 @@ def details(request, addon_id):
 		return HttpResponse(detailsText(addon))
 	else:
 		return render_to_response('addons/details.html', {'addon': addon})
-
-def errorText(error_message):
-	#this returns a WML-parsable string describing an error that should be handled by the game well
-	sDesc = '[error]\n'
-	sDesc = 'message='+error_message+'\n'
-	sDesc = '[/error]'
-	return sDesc
-
 
 def getFile(request, addon_id):
 	logger.info("Download of addon "+str(addon_id)+" requested from "+request.META['REMOTE_ADDR']);
@@ -164,89 +164,70 @@ def publish(request):
 	user = authenticate(username=login, password=request.POST['password'])
 
 	if 'wml' in request.GET:
-		def error_response(title, error):
-			return render_to_response('addons/error.wml',
-						  {'errorType':title, 'errorDesc':error})
+		def error_response(title, error, **kwargs):
+			return wml_error_response(title, error)
 	else:
-		def error_response(title, error):
-			return render_to_response('addons/error.html',
-						  {'errorType':title, 'errorDesc':error})
+		def error_response(title, error, **kwargs):
+			dict = {'errorType':title, 'errorDesc':error, 'loginVal':login}
+			for k in kwargs.keys(): dict[k] = kwargs[k]
+			return render_to_response('addons/publishForm.html', dict)
 
 	if user is None:
-		logger.info(	"Attempt to login as " + login +
-				" from " + request.META['REMOTE_ADDR'] +
-				" failed during an attempt to publish.")
-
-		if 'wml' in request.GET:
-			return error_response("login fail", "login fail");
-		else:
-			return render_to_response('addons/publishForm.html', {'errors_credentials' : True,
-									'loginVal' : login})
-
-	errors_wml = False
-	file_wml = None
-
-	try:
-		file_wml = request.FILES['wml']
-	except:
-		errors_wml = True
-
-	if errors_wml and 'wml' not in request.POST:
-		logger.info(	"Attempt to publish an addon by " + login +
-				" from " + request.META['REMOTE_ADDR'] + 
-				" failed due to invalid files.")
-		return render_to_response('addons/publishForm.html', {'errors_wml' : errors_wml,
-								      'errors_pbl' : False,
-							              'loginVal' : login})
-
-	cs = CampaignClient()
-	if file_wml != None:
-		file_data = file_wml.read()
-	else:
-		if 'wml' not in request.POST:
-			print 'debug: error na wml file data'
-			raise Exception("NO WML FILE DATA")
-		file_data = request.POST['wml']
-	
-	keys_vals = {}
-	if 'wml' in request.POST:
-                file = open("dump.wml", 'w')
-	        file.write(request.POST['wml'].encode('ascii', 'ignore'))
-	        file.close()
-        
-	try:
-		decoded_wml = cs.decode(file_data)
-	except Exception as e:
-		print "wml decoding error: ", e
-
-  	for field in ["title", "author", "description", "version", "icon", "type"]:
-		keys_vals[field] = decoded_wml.get_text_val(field).strip()
-		if keys_vals[field] == None:
-			print 'debug: WML key error (PBL IN WML)'
-			raise Exception("WML key error (PBL IN WML)")
-
-	try:
-		addon_type = AddonType.objects.get(type_name=keys_vals['type'])
-	except ObjectDoesNotExist:
-		return error_response('WML PBL error', ['Addon has a wrong type'])
+		logger.info("Attempt to login as %s from %s failed during publication"
+			% (login, request.META['REMOTE_ADDR']))
+		return error_response("Error", "Authentication error", errors_credentials=True);
 
 	try:
 		addon = Addon.objects.get(name=keys_vals['title'])
 		if len(addon.authors.filter(name=login)) == 0:
 			return error_response('Author error', ['This user is not one of authors'])
 		addon.uploads += 1
-		if addon.file_tbz:
-			addon.file_tbz.delete()
-		if addon.file_wml:
-			addon.file_wml.delete()
 	except ObjectDoesNotExist:
 		addon = Addon()
 		addon.name = keys_vals['title']
 		addon.uploads = 1
 		addon.downloads = 0
 
-	
+	errors_wml = False
 
+	try:
+		file_wml = request.FILES['wml']
+	except:
+		file_wml = None
+
+	cs = CampaignClient()
+	if file_wml != None:
+		file_data = file_wml.read()
+	else:
+		if 'wml' not in request.POST:
+			print 'debug: error no wml file data'
+			logger.info("Attempt to publish an addon by %s from %s failed: no WML"
+				% (login, request.META['REMOTE_ADDR']))
+			return error_response('File error', ['No WML file data'])
+		file_data = request.POST['wml']
+
+	try:
+		decoded_wml = cs.decode(file_data)
+	except Exception as e:
+		print "wml decoding error: ", e
+		return error_response('File error', ['WML decoding error'])
+
+	keys_vals = {}
+	for k in ["title", "author", "description", "version", "icon", "type"]:
+		keys_vals[k] = decoded_wml.get_text_val(field).strip()
+		if keys_vals[k] == None:
+			print 'debug: WML key error (PBL IN WML)'
+			return error_response('WML key error', 'Mandatory key %s missing' % k)
+
+	try:
+		addon_type = AddonType.objects.get(type_name=keys_vals['type'])
+	except ObjectDoesNotExist:
+		return error_response('WML PBL error', ['Addon has a wrong type'])
+
+	if addon.file_tbz:
+		addon.file_tbz.delete()
+	if addon.file_wml:
+		addon.file_wml.delete()
 	if file_wml != None:
 		file_wml.name = addon.name + '.wml'
 	else:
@@ -254,7 +235,6 @@ def publish(request):
 		file.write(file_data.encode('ascii', 'ignore'))
 		file.close()
 		file_wml =  "addons/" + addon.name + ".wml"
-		
 
 	tmp_dir_name = "%016x" % random.getrandbits(128)
 	cs.unpackdir(decoded_wml, tmp_dir_name, verbose = False)
@@ -269,34 +249,28 @@ def publish(request):
 	addon.type = addon_type
 	addon.file_wml = file_wml
 	addon.lastUpdate = datetime.now()
-	addon.save()
 
 	addon.authors.clear()
-
-	authors_str = []
-	for author in re.split(r",", keys_vals['author']):
-		authors_str.append(author)
-	if login not in authors_str:
-		authors_str.append(login)
-
-	for a in authors_str:
-		author = None
+	authors = keys_vals['author'].split(",")
+	if login not in authors:
+		authors.append(login)
+	for a in authors:
 		try:
 			author = Author.objects.get(name=a)
-		except ObjectDoesNotExist:
+		except ObjectDoesNotExist: #todo
 			author = Author(name=a)
 			author.save()
 		addon.authors.add(author)
-		
-	addon.save()
 
-	logger.info(	"User " + login + " from " + request.META['REMOTE_ADDR'] + 
-					" has successfully published addon #" + str(addon.id) +
-					" ("+addon.name+ ")")
-	return render_to_response('addons/publishForm.html', {'publish_success' : True,
-								      'loginVal' : login,
-								      'addonId' : addon.id})
-			
+	addon.save()
+	logger.info("User %s from %s has successfully published addon #%d (%s)"
+		% (login, request.META['REMOTE_ADDR'], addon.id, addon.name))
+	if ('wml' in request.GET):
+		return wml_message_response('Success', 'Addon published successfully')
+	else:
+		return render_to_response('addons/publishForm.html',
+			{'publish_success' : True, 'loginVal' : login, 'addonId' : addon.id})
+
 def publishForm(request):
 	return render_to_response('addons/publishForm.html')
 	
@@ -327,7 +301,7 @@ def remove(request, addon_id):
 							   'errors_permissions':errors_permissions,
 							   'remove_success':not(errors_credentials or errors_permissions)
 							   })
-	
+
 def adminWescampLog(request):
 	if request.user.is_staff:
 		logger.info("Foobar admin reads some Wescamp logs");
