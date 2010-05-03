@@ -177,17 +177,6 @@ def publish(request):
 			% (login, request.META['REMOTE_ADDR']))
 		return error_response("Error", "Authentication error", errors_credentials=True);
 
-	try:
-		addon = Addon.objects.get(name=keys_vals['title'])
-		if len(addon.authors.filter(name=login)) == 0:
-			return error_response('Author error', ['This user is not one of authors'])
-		addon.uploads += 1
-	except ObjectDoesNotExist:
-		addon = Addon()
-		addon.name = keys_vals['title']
-		addon.uploads = 1
-		addon.downloads = 0
-
 	errors_wml = False
 
 	try:
@@ -214,7 +203,7 @@ def publish(request):
 
 	keys_vals = {}
 	for k in ["title", "author", "description", "version", "icon", "type"]:
-		keys_vals[k] = decoded_wml.get_text_val(field).strip()
+		keys_vals[k] = decoded_wml.get_text_val(k).strip()
 		if keys_vals[k] == None:
 			print 'debug: WML key error (PBL IN WML)'
 			return error_response('WML key error', 'Mandatory key %s missing' % k)
@@ -223,6 +212,17 @@ def publish(request):
 		addon_type = AddonType.objects.get(type_name=keys_vals['type'])
 	except ObjectDoesNotExist:
 		return error_response('WML PBL error', ['Addon has a wrong type'])
+
+	try:
+		addon = Addon.objects.get(name=keys_vals['title'])
+		if len(addon.authors.filter(name=login)) == 0:
+			return error_response('Author error', ['This user is not one of authors'])
+		addon.uploads += 1
+	except ObjectDoesNotExist:
+		addon = Addon()
+		addon.name = keys_vals['title']
+		addon.uploads = 1
+		addon.downloads = 0
 
 	if addon.file_tbz:
 		addon.file_tbz.delete()
@@ -250,6 +250,8 @@ def publish(request):
 	addon.file_wml = file_wml
 	addon.lastUpdate = datetime.now()
 
+	addon.save() #needed to avoid a "'Addon' instance needs to have a primary key 
+	             # value before a many-to-many relationship can be used." error
 	addon.authors.clear()
 	authors = keys_vals['author'].split(",")
 	if login not in authors:
