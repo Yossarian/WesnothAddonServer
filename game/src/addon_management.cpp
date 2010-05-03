@@ -533,6 +533,27 @@ namespace {
 		return true;
 	}
 
+	//Will create a dialog (either error or informative) based on response from
+	//the server
+	void dialog_from_response(game_display& disp, std::string response)
+	{
+		try {
+			config cfg;
+			read(cfg, response);
+			if (config const &error = cfg.child("error")) {
+				gui2::show_error_message(disp.video(), error["message"]);
+			}
+			else if (config const &msg = cfg.child("message"))
+			{
+				std::string type = msg["type"];
+				std::string message = msg["message"];
+				gui2::show_transient_message(disp.video(), _(type.c_str()), message);
+			}
+		} catch (config::error& e) {
+			gui2::show_error_message(disp.video(), "Unknown response");
+		}
+	}
+
 	void upload_addon_to_server(game_display& disp, const std::string& addon, network::addon_client& ac)
 	{
 		//Get credentials
@@ -570,26 +591,13 @@ namespace {
 			assert(!pd.running());
 			if (pd.abort()) 
 			{
-				//User clicked abort, maybe handle this more gracefully?
+				gui2::show_transient_message(disp.video(), _("Aborted"), "Aborted transfer");
 				return;
 			}
 			
 			std::string response = ac.get_async_response();
-			try {
-				config cfg;
-				read(cfg, response);
-				if (config const &dlerror = cfg.child("error")) {
-					gui2::show_error_message(disp.video(), dlerror["message"]);
-					return;
-				}
-			} catch (config::error& e) {
-				gui2::show_error_message(disp.video(), "Unknown response");
-				return;
-			}
+			dialog_from_response(disp, response);
 		}
-
-			//TODO: parse response and show a dialog
-			//"yay, published" or "oops, wrong credentials" etc
 	}
 
 	void delete_remote_addon(game_display& disp, const std::string& addon, network::addon_client& ac)
@@ -617,6 +625,7 @@ namespace {
 				return;
 			}
 			std::string response = ac.get_async_response();
+			dialog_from_response(disp, response);
 		}
 		
 	}

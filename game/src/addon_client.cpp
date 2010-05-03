@@ -83,16 +83,18 @@ std::string addon_client::get_response(std::string url,
 	if(post && arguments.find("wml") != arguments.end()) {
 		//assume wml sending means a hueg amount of data and use a more
 		//efficient encoding
-		struct curl_httppost* post = NULL;
+		struct curl_httppost* first = NULL;
 		struct curl_httppost* last = NULL;
 		/* Add name/ptrcontent/contenttype section */
 		for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
-			curl_formadd(&post, &last, CURLFORM_COPYNAME, i->first.c_str(),
+			curl_formadd(&first, &last, CURLFORM_COPYNAME, i->first.c_str(),
 					   CURLFORM_PTRCONTENTS, i->second.c_str(),
 					   CURLFORM_CONTENTSLENGTH, i->second.length(),
 					   CURLFORM_CONTENTTYPE, "text/plain", CURLFORM_END);
 		}
-		curl_easy_setopt(handle_, CURLOPT_HTTPPOST, post);
+		//TODO: there's a small memory leak right there!
+		//One should call curl_formfree on post and last after flushing.
+		curl_easy_setopt(handle_, CURLOPT_HTTPPOST, first);
 	} else {
 		//convert arguments to an encoded string like key=value?other+key=1
 		std::ostringstream params;
@@ -231,7 +233,7 @@ std::string addon_client::delete_remote_addon(const std::string& addon_name, con
 	args["password"] = pass;
 
 	std::ostringstream address;
-	address <<base_url_<< "remove/" << url_encode(addon_name) <<"/";
+	address <<base_url_<< "remove/" << url_encode(addon_name) <<"/?wml";
 	return get_response(address.str(), args, true);
 
 	
