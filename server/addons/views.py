@@ -26,6 +26,9 @@ formatter = logging.Formatter(LOG_MSG_FORMAT)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+icons_dir = '../game/data/core/images/'
+ICONS_ROOT = MEDIA_ROOT + '/icons/'
+
 def wml_error_response(title, error):
 	return render_to_response('addons/error.wml',
 		{'errorType':title, 'errorDesc':error})
@@ -242,9 +245,22 @@ def publish(request):
 	Popen(["tar", "cjf", tarname, "-C", tmp_dir_name, '.']).wait()
 	shutil.rmtree(tmp_dir_name, True)
 	addon.file_tbz = "addons/" + addon.name + ".tar.bz2"
-
+	
 	addon.ver = keys_vals['version']
 	addon.img = keys_vals['icon']
+	
+	icon_path = addon.img.split('/')
+	current_path = MEDIA_ROOT
+	i = 0
+	while i<len(icon_path) - 1:
+		current_path = os.path.join(current_path, icon_path[i])
+		i = i + 1
+		if not os.path.exists(current_path):
+			os.makedirs(current_path)
+	
+	if not os.path.exists(ICONS_ROOT):
+		os.makedirs(ICONS_ROOT)
+	shutil.copyfile(icons_dir + addon.img, ICONS_ROOT + addon.img)
 	addon.desc = keys_vals['description']
 	addon.type = addon_type
 	addon.file_wml = file_wml
