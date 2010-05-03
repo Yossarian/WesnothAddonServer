@@ -1,2 +1,5 @@
 #!/bin/bash
-./manage.py runserver
+if [ ! -e sqlite.db ]; then
+	cp ../test_data/test.db sqlite.db
+fi
+./manage.py runserver 0.0.0.0:8000
