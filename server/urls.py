@@ -24,7 +24,7 @@ urlpatterns = patterns('',
 	(r'^test_media/(?P<path>.*)$', 'django.views.static.serve',
 		{'document_root': './test_media'}),
 	(r'^icons/(?P<path>.*)$', 'django.views.static.serve',
-		{'document_root': '../game/data/core/images'}),
+		{'document_root': './test_media/icons'}),
 	(r'^$', 'django.views.generic.simple.redirect_to', {'url': 'addons/'})
 
 )
