@@ -567,24 +567,18 @@ namespace {
 			std::string password = preferences::password();
 
 			//Get PBL data of the addon
-			config pbl;
-			get_addon_info(addon, pbl);
-			pbl["name"] = addon;
+			config cfg;
+			get_addon_info(addon, cfg);
+			cfg["name"] = addon;
 
 			//Get actual addon content
-			config addon_data; 
-			archive_addon(addon,addon_data);
-
-			//Merge both
-			config data;
-			config& d2 = data.add_child("upload",pbl);
-			d2.add_child("data",addon_data);
+			archive_addon(addon, cfg);
 
 			LOG_NET << "uploading add-on...\n";
 			
 			//Async publish
 			network::progress_data pd;
-			ac.async_publish_addon(pd, d2, login, password);
+			ac.async_publish_addon(pd, cfg, login, password);
 			gui2::tnetwork_progress dialog;
 			dialog.set_progress_object(pd);
 			dialog.show(disp.video());
