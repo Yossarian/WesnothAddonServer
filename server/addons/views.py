@@ -189,14 +189,14 @@ def publish(request):
 
 	cs = CampaignClient()
 	if file_wml != None:
-		file_data = file_wml.read()
+		file_data = file_wml.read().encode('ascii', 'ignore')
 	else:
 		if 'wml' not in request.POST:
 			print 'debug: error no wml file data'
 			logger.info("Attempt to publish an addon by %s from %s failed: no WML"
 				% (login, request.META['REMOTE_ADDR']))
 			return error_response('File error', ['No WML file data'])
-		file_data = request.POST['wml']
+		file_data = request.POST['wml'].encode('ascii', 'ignore')
 
 	try:
 		decoded_wml = cs.decode(file_data)
@@ -237,13 +237,14 @@ def publish(request):
 		file_wml.name = addon.name + '.wml'
 	else:
 		file = open(os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".wml", 'w')
-		file.write(file_data.encode('ascii', 'ignore'))
+		file.write(file_data)
 		file.close()
 		file_wml =  "addons/" + addon.name + ".wml"
 
 	tmp_dir_name = "%016x" % random.getrandbits(128)
 	cs.unpackdir(decoded_wml, tmp_dir_name, verbose = False)
 	tarname = os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".tar.bz2"
+	#print "tar ", "cjf ", tarname, " -C ", tmp_dir_name, ' .'
 	Popen(["tar", "cjf", tarname, "-C", tmp_dir_name, '.']).wait()
 	shutil.rmtree(tmp_dir_name, True)
 	addon.file_tbz = "addons/" + addon.name + ".tar.bz2"
@@ -252,7 +253,7 @@ def publish(request):
 	addon.img = keys_vals['icon']
 	
 	icon_path = addon.img.split('/')
-	current_path = MEDIA_ROOT
+	current_path = ICONS_ROOT
 	i = 0
 	while i<len(icon_path) - 1:
 		current_path = os.path.join(current_path, icon_path[i])

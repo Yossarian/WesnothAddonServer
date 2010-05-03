@@ -450,11 +450,14 @@ class CampaignClient:
         to the filesystem. The data parameter is the WML object, 
         path is the path under which it will be placed.
         """
-
         try:
             os.mkdir(path)
         except OSError:
             pass
+
+        if data.get_all("data") != []:
+            data = data.get_first("data")
+
         for f in data.get_all("file"):
             name = f.get_text_val("name", "?")
             contents = f.get_text("contents")
