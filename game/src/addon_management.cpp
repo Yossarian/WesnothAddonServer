@@ -1189,7 +1189,7 @@ namespace {
 
 		} catch(config::error& e) {
 			ERR_CFG << "config::error thrown during transaction with add-on server; \""<< e.message << "\"\n";
-			gui2::show_error_message(disp.video(), _("Network communication error."));
+			gui2::show_error_message(disp.video(), _("Could not parse server response."));
 		} catch(network::error& e) {
 			ERR_NET << "network::error thrown during transaction with add-on server; \""<< e.message << "\"\n";
 			gui2::show_error_message(disp.video(), _("Remote host disconnected."));
