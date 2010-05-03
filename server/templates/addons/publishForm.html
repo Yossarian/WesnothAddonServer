@@ -4,7 +4,7 @@
 {% if publish_success %}
 <meta 
    http-equiv="refresh" 
-   content="3; url={% url addons.views.details 1 %}" />
+   content="3; url={% url addons.views.details addonId %}" />
 {% endif %}
 {% endblock %}
 
@@ -160,7 +160,7 @@ div.spacer {
 				{% if errors_zip %}<p style="color: #F00; font-weight: bold">Zipped addon folder incorrect or missing</p>{% endif %}
 				{% if publish_success %}
 				<p style="color: #005a00; font-weight: bold">Your addon has been published, thank you!</p>
-				<p>Click <a href="{% url addons.views.details 1 %}">here</a> if you aren't automatically redirected to the details page within 10 seconds</p>{% endif %}
+				<p>Click <a href="{% url addons.views.details addonId %}">here</a> if you aren't automatically redirected to the details page within 10 seconds</p>{% endif %}
 				</center>
 			</td>
 		</tr>	            

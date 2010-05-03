@@ -292,7 +292,8 @@ def publish(request):
 					" has successfully published addon #" + str(addon.id) +
 					" ("+addon.name+ ")")
 	return render_to_response('addons/publishForm.html', {'publish_success' : True,
-								      'loginVal' : login})
+								      'loginVal' : login,
+								      'addonId' : addon.id})
 			
 def publishForm(request):
 	return render_to_response('addons/publishForm.html')
