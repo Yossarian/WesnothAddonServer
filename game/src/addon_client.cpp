@@ -99,7 +99,11 @@ std::string addon_client::get_response(std::string url,
 		//convert arguments to an encoded string like key=value?other+key=1
 		std::ostringstream params;
 		for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
-			params << url_encode(i->first) << '=' << url_encode(i->second) << '&' ;
+			params << url_encode(i->first) << '=' << url_encode(i->second);
+			string_map_t::const_iterator j = i;
+			j++;
+			if(j != arguments.end())
+				params << '&';
 			LOG_AD << params.str();
 		}
 		std::string params_str = params.str();
