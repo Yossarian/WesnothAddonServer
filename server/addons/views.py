@@ -203,8 +203,10 @@ def publish(request):
 
 	keys_vals = {}
 	for k in ["title", "author", "description", "version", "icon", "type"]:
-		keys_vals[k] = decoded_wml.get_text_val(k).strip()
-		if keys_vals[k] == None:
+		keys_vals[k] = decoded_wml.get_text_val(k)
+		if not keys_vals[k] is None:
+			keys_vals[k] = keys_vals[k].strip()
+		if keys_vals[k] is None or len(keys_vals[k]) < 1:
 			print 'debug: WML key error (PBL IN WML)'
 			return error_response('WML key error', 'Mandatory key %s missing' % k)
 
