@@ -209,9 +209,11 @@ def publish(request):
 		file_data = request.POST['wml']
 	
 	keys_vals = {}
-	file = open("dump.wml", 'w')
-	file.write(request.POST['wml'].encode('ascii', 'ignore'))
-	file.close()
+	if 'wml' in request.POST:
+                file = open("dump.wml", 'w')
+	        file.write(request.POST['wml'].encode('ascii', 'ignore'))
+	        file.close()
+        
 	try:
 		decoded_wml = cs.decode(file_data)
 	except Exception as e:
