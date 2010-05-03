@@ -1,0 +1,6 @@
+{% autoescape off %}
+[message]
+    type="{{msgType}}"
+    message="{{msgText}}"
+[/message]
+{% endautoescape %}
