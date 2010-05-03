@@ -80,12 +80,23 @@ std::string addon_client::get_response(std::string url,
 		const string_map_t& arguments,
 		bool post)
 {
+	std::ostringstream params;
+	for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
+		params << url_encode(i->first) << '=' << url_encode(i->second);
+		string_map_t::const_iterator j = i;
+		j++;
+		if(j != arguments.end())
+			params << '&';
+		LOG_AD << params.str();
+	}
+	std::string params_str = params.str();
+
 	if(post && arguments.find("wml") != arguments.end()) {
 		//assume wml sending means a hueg amount of data and use a more
 		//efficient encoding
 		struct curl_httppost* first = NULL;
 		struct curl_httppost* last = NULL;
-		/* Add name/ptrcontent/contenttype section */
+		//Add name/ptrcontent/contenttype section
 		for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
 			curl_formadd(&first, &last, CURLFORM_COPYNAME, i->first.c_str(),
 					   CURLFORM_PTRCONTENTS, i->second.c_str(),
@@ -96,17 +107,7 @@ std::string addon_client::get_response(std::string url,
 		//One should call curl_formfree on post and last after flushing.
 		curl_easy_setopt(handle_, CURLOPT_HTTPPOST, first);
 	} else {
-		//convert arguments to an encoded string like key=value?other+key=1
-		std::ostringstream params;
-		for(string_map_t::const_iterator i = arguments.begin(); i != arguments.end(); i++) {
-			params << url_encode(i->first) << '=' << url_encode(i->second);
-			string_map_t::const_iterator j = i;
-			j++;
-			if(j != arguments.end())
-				params << '&';
-			LOG_AD << params.str();
-		}
-		std::string params_str = params.str();
+		//convert arguments to an encoded string like key=value?other+key=1		
 		if (post) {
 			//set post body
 			curl_easy_setopt(handle_, CURLOPT_POSTFIELDS, (void*)(params_str.c_str()));
