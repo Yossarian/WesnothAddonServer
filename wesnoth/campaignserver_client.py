@@ -35,6 +35,9 @@ class CampaignClient:
         self.sock = None
         self.address = "127.0.0.1:8000"
         
+        if address != None:
+            self.address = address
+
         """
         if address != None:
             s = address.split(":")
@@ -85,63 +88,49 @@ class CampaignClient:
         #        pass # Well, what can we do?
 
 
-    def make_packet(self, doc):
-        root = wmldata.DataSub("WML")
-        root.insert(doc)
-        return root.make_string()
+#    def make_packet(self, doc):
+#        root = wmldata.DataSub("WML")
+#        root.insert(doc)
+#        return root.make_string()
 
-    def send_packet(self, packet):
-        """
-        Send binary data to the server.
-        """
-        # Compress the packet before we send it
-        io = StringIO.StringIO()
-        z = gzip.GzipFile(mode = "w", fileobj = io)
-        z.write(packet)
-        z.close()
-        zdata = io.getvalue()
-
-        zpacket = struct.pack("!i", len(zdata)) + zdata
-        self.sock.sendall(zpacket)
-
-    def read_packet(self):
-        """
-        Read binary data from the server.
-        """
-        packet = ""
-        while len(packet) < 4 and not self.canceled:
-            packet += self.sock.recv(4 - len(packet))
-        if self.canceled:
-            return None
-
-        self.length = l = struct.unpack("!i", packet)[0]
-        
-        sys.stderr.write("Receiving %d bytes.\n" % self.length)
-    
-        packet = ""
-        while len(packet) < l and not self.canceled:
-            packet += self.sock.recv(l - len(packet))
-            self.counter = len(packet)
-        if self.canceled:
-            return None
-        
-        sys.stderr.write("Received %d bytes.\n" % len(packet))
-        
-        if packet.startswith("\x1F\x8B"):
-            if self.verbose:
-                sys.stderr.write("GZIP compression found...\n")
-            io = StringIO.StringIO(packet)
-            z = gzip.GzipFile(fileobj = io)
-            unzip = z.read()
-            z.close()
-            packet = unzip
-
-        elif packet.startswith( '\x78\x9C' ):
-            if self.verbose:
-                sys.stderr.write("ZLIB compression found...\n")
-            packet = zlib.decompres( packet )
-
-        return packet
+#    def read_packet(self):
+#        """
+#        Read binary data from the server.
+#        """
+#        packet = ""
+#        while len(packet) < 4 and not self.canceled:
+#            packet += self.sock.recv(4 - len(packet))
+#        if self.canceled:
+#            return None
+#
+#        self.length = l = struct.unpack("!i", packet)[0]
+#        
+#        sys.stderr.write("Receiving %d bytes.\n" % self.length)
+#    
+#        packet = ""
+#        while len(packet) < l and not self.canceled:
+#            packet += self.sock.recv(l - len(packet))
+#            self.counter = len(packet)
+#        if self.canceled:
+#            return None
+#        
+#        sys.stderr.write("Received %d bytes.\n" % len(packet))
+#        
+#        if packet.startswith("\x1F\x8B"):
+#            if self.verbose:
+#                sys.stderr.write("GZIP compression found...\n")
+#            io = StringIO.StringIO(packet)
+#            z = gzip.GzipFile(fileobj = io)
+#            unzip = z.read()
+#            z.close()
+#            packet = unzip
+#
+#        elif packet.startswith( '\x78\x9C' ):
+#            if self.verbose:
+#                sys.stderr.write("ZLIB compression found...\n")
+#            packet = zlib.decompres( packet )
+#
+#        return packet
 
     def decode( self, data ):
         if self.verbose:
@@ -230,12 +219,6 @@ class CampaignClient:
         """
         pass
 
-    def encode( self, data ):
-        """
-        Always encode GZIP compressed - future use ZLIB
-        """
-        pass
-
     def list_campaigns(self):
         """
         Returns a WML object containing all available info from the server.
@@ -270,25 +253,8 @@ class CampaignClient:
         
         response = urllib2.urlopen(req)
         data = response.read()
-        #request = wmldata.DataSub("delete")
-        #request.set_text_val("name", name)
-        #request.set_text_val("passphrase", passphrase)
 
-        #self.send_packet(self.make_packet(request))
-        #return self.decode(self.read_packet())
         return None
-
-#    def change_passphrase(self, name, old, new):
-#        """
-#        Changes the passphrase of a campaign on the server.
-#        """
-#        request = wmldata.DataSub("change_passphrase")
-#        request.set_text_val("name", name)
-#        request.set_text_val("passphrase", old)
-#        request.set_text_val("new_passphrase", new)
-
-#        self.send_packet(self.make_packet(request))
-#        return self.decode(self.read_packet())
 
     def get_campaign_raw(self, id):
         """
@@ -411,35 +377,6 @@ class CampaignClient:
                 self.cs.async_cancel()
 
         mythread = MyThread( id, self )
-        mythread.start()
-
-        return mythread
-
-    def put_campaign_async(self, *args):
-        """
-        This is like put_campaign, but returns immediately, 
-        doing server communications in a background thread.
-        """
-        class MyThread(threading.Thread):
-            def __init__(self, name, cs, args):
-                threading.Thread.__init__( self, name=name )
-                self.name = name
-                self.cs = cs
-                self.args = args
-                self.data = None
-
-                self.event = threading.Event()
-
-            def run(self):
-                self.data = self.cs.put_campaign(*self.args)
-                self.event.set()
-
-            def cancel(self):
-                self.data = None
-                self.event.set()
-                self.cs.async_cancel()
-
-        mythread = MyThread(args[1], self, args)
         mythread.start()
 
         return mythread

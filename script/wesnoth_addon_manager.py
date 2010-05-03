@@ -28,13 +28,12 @@ if __name__ == "__main__":
 
     optionparser = optparse.OptionParser()
     optionparser.add_option("-a", "--address", help = "specify server address",
-        default = "add-ons.wesnoth.org")
+        default = "127.0.0.1")
     optionparser.add_option("--html",
         help = "Output a HTML overview into the given directory.",)
     optionparser.add_option("-p", "--port",
-        help = "specify server port or BfW version (%s)" % " or ".join(
-        map(lambda x: x[1], CampaignClient.portmap)),
-        default = CampaignClient.portmap[0][0])
+        help = "specify server port",
+        default = 8000)
     optionparser.add_option("-l", "--list", help = "list available add-ons",
         action = "store_true",)
     optionparser.add_option("-w", "--wml",
@@ -98,16 +97,8 @@ if __name__ == "__main__":
     options, args = optionparser.parse_args()
 
     port = options.port
-    if "." in options.port:
-        for (portnum, version) in CampaignClient.portmap:
-            if options.port == version:
-                port = portnum
-                break
-        else:
-            sys.stderr.write("Unknown BfW version %s\n" % options.port)
-            sys.exit(1)
-
     address = options.address
+
     if not ":" in address:
         address += ":" + str(port)
 
@@ -125,6 +116,9 @@ if __name__ == "__main__":
             file(name, "w").write(mythread.data)
         else:
             decoded = cs.decode(mythread.data)
+	    if decoded.get_text_val("name") != None:
+		name = decoded.get_text_val("name")
+
             dirname = os.path.join(cdir, name)
             oldcfg_path = os.path.join(cdir, name + ".cfg")
 
@@ -236,21 +230,25 @@ if __name__ == "__main__":
 		id = campaign.get_text_val("remote_id", "")
                 if re.escape(options.download).replace("\\_", "_") == options.download:
                     if name == options.download:
-                        fetchlist.append((name, version, uploads))
+                        fetchlist.append((id, name, version, uploads))
                 elif not options.type or options.type == type:
                     if re.search(options.download, name):
-                        fetchlist.append((name, version, uploads))
+                        fetchlist.append((id, name, version, uploads))
 
 	if len(fetchlist) == 0:
 		print "No addon found"
 
-        for name, version, uploads in fetchlist:
+        for id, name, version, uploads in fetchlist:
             info = os.path.join(options.campaigns_dir, name, "_info.cfg")
+	    print info
             local_uploads, local_version = get_info(info)
             if uploads != local_uploads:
                 # The uploads > local_uploads likely means a server reset
                 if version != local_version or uploads > local_uploads:
-                    get(id, name, version, uploads, options.campaigns_dir)
+		    try:
+                    	get(id, name, version, uploads, options.campaigns_dir)
+		    except wmlparser.Error:
+			print "Addon", "'" +  name + "'", "is corrupted"
                 else:
                     print "Not downloading", name, \
                         "as the version already is", local_version, \
