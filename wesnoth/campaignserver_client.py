@@ -279,13 +279,13 @@ class CampaignClient:
 
     def put_raw_campaign(self, wmldata, login, password):
         data = urllib.urlencode({"login" : login, "password" : password, "wml" : wmldata})
-        req = urllib2.Request('http://' + self.address + '/addons/publish/', data)
+        req = urllib2.Request('http://' + self.address + '/addons/publish/?wml', data)
         
         response = urllib2.urlopen(req)
         data = response.read()
-        return None
+        return self.decode(data)
 
-    def put_campaign(self, name, cfgfile, directory, ign, stuff):
+    def put_campaign(self, name, cfgfile, directory, ign, stuff, creds):
         """
         Uploads a campaign to the server. The title, name, author, passphrase,
         description, version and icon parameters are what would normally be
@@ -295,13 +295,13 @@ class CampaignClient:
 
         The directory is the name of the campaign's directory.
         """
-        request = wmldata.DataSub("upload")
+        wml_data = wmldata.DataSub("WML")
         for k, v in stuff.items():
-            request.set_text_val(k, v)
-        request.set_text_val("name", name)
+            wml_data.set_text_val(k, v)
+        wml_data.set_text_val("name", name)
 
         data = wmldata.DataSub("data")
-        request.insert(data)
+        wml_data.insert(data)
 
         def put_file(name, f):
             for ig in ign:
@@ -346,11 +346,7 @@ class CampaignClient:
         sys.stderr.write("Adding directory %s as %s.\n" % (directory, name))
         data.insert(put_dir(name, directory))
 
-        packet = self.make_packet(request)
-        open("packet.dump", "wb").write(packet)
-        self.send_packet(packet)
-
-        return self.decode(self.read_packet())
+        return self.put_raw_campaign(wml_data.make_string(), creds['login'], creds['password'])
 
     def get_campaign_raw_async(self, id):
         """

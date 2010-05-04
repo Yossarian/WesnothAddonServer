@@ -278,12 +278,12 @@ if __name__ == "__main__":
 
     elif options.upload:
         cs = CampaignClient(address)
-	if os.path.isfile(options.upload) and re.match(r"^.*wml$", options.upload) != None:
-		data = file(options.upload).read()
-		cs.put_raw_campaign(data, options.login, options.password)
-	else:
-		print "argument must be wml file"
-	"""
+	#if os.path.isfile(options.upload) and re.match(r"^.*wml$", options.upload) != None:
+	#	data = file(options.upload).read()
+	#	cs.put_raw_campaign(data, options.login, options.password)
+	#else:
+	#	print "argument must be wml file"
+	
         if os.path.isdir(options.upload):
             # New style with _server.pbl
             pblfile = os.path.join(options.upload, "_server.pbl")
@@ -326,22 +326,19 @@ if __name__ == "__main__":
                 "Thumbs.db"]
 
         stuff = {}
-        for field in ["title", "author", "passphrase", "description",
+        for field in ["title", "author", "description",
             "version", "icon", "type", "email", "translate"]:
             stuff[field] = pbl.get_text_val(field)
-        
-        mythread = cs.put_campaign_async(name, cfgfile, wmldir, ign, stuff)
 
-        pcounter = 0
-        while not mythread.event.isSet():
-            mythread.event.wait(1)
-            if cs.counter != pcounter:
-                print "%d/%d" % (cs.counter, cs.length)
-                pcounter = cs.counter
+	creds = {}
+	creds['login'] = options.login
+	creds['password'] = options.password
 
-        for message in mythread.data.find_all("message", "error"):
+        resp = cs.put_campaign(name, cfgfile, wmldir, ign, stuff, creds)	
+
+        for message in resp.find_all("message", "error"):
             print message.get_text_val("message")
-	"""
+	
 
     elif options.update or options.status:
         if options.status:
