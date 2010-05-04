@@ -266,9 +266,9 @@ if __name__ == "__main__":
         cs.unpackdir(decoded, options.campaigns_dir,  verbose = True)
     elif options.remove:
         cs = CampaignClient(address)
-        m = cs.delete_campaign(options.remove, options.login, options.password)
-        #for message in data.find_all("message", "error"):
-        #    print message.get_text_val("message")
+        data = cs.delete_campaign(options.remove, options.login, options.password)
+       	for message in data.find_all("message", "error"):
+    		print message.get_text_val("message")
 
     elif options.change_passphrase:
         cs = CampaignClient(address)

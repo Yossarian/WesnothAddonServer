@@ -249,12 +249,12 @@ class CampaignClient:
 
         data = urllib.urlencode({"login" : login, "password" : password})
         req = urllib2.Request('http://' + self.address + '/addons/remove/'
-                                + str(addon_id) + '/', data)
+                                + str(addon_id) + '/?wml', data)
         
         response = urllib2.urlopen(req)
         data = response.read()
 
-        return None
+        return self.decode(data)
 
     def get_campaign_raw(self, id):
         """
