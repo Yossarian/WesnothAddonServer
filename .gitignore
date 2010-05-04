@@ -5,3 +5,5 @@ Thumbs.db
 .project
 *~
 #*#
+server/log.txt
+game/last_get.html
