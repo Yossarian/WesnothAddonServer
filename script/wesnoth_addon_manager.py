@@ -158,6 +158,25 @@ if __name__ == "__main__":
                         sys.stderr.write("Creating tarball with command: tar " +
                             "cjf %(tarname)s -C %(cdir)s %(name)s\n" % locals())
                     Popen(["tar", "cjf", tarname, "-C", cdir, name])
+    
+    def search_addons(addon_list, pattern):
+	if not addon_list:
+		return []
+	fetchlist = []
+	campaigns = addon_list.get_or_create_sub("campaigns")
+	for campaign in campaigns.get_all("campaign"):
+       		name = campaign.get_text_val("name", "?")
+		type = campaign.get_text_val("type", "")
+		version = campaign.get_text_val("version", "")
+		uploads = campaign.get_text_val("uploads", "")
+		id = campaign.get_text_val("remote_id", "")
+		if re.escape(pattern).replace("\\_", "_") == pattern:
+			if name == pattern:
+				fetchlist.append((id, name, version, uploads))
+		elif not options.type or options.type == type:
+			if re.search(pattern, name):
+				fetchlist.append((id, name, version, uploads))
+	return fetchlist
 
     def get_info(name):
         """
@@ -218,22 +237,8 @@ if __name__ == "__main__":
 
     elif options.download:
         cs = CampaignClient(address)
-        fetchlist = []
         campaign_list = data = cs.list_campaigns()
-        if data:
-            campaigns = data.get_or_create_sub("campaigns")
-            for campaign in campaigns.get_all("campaign"):
-                name = campaign.get_text_val("name", "?")
-                type = campaign.get_text_val("type", "")
-                version = campaign.get_text_val("version", "")
-                uploads = campaign.get_text_val("uploads", "")
-		id = campaign.get_text_val("remote_id", "")
-                if re.escape(options.download).replace("\\_", "_") == options.download:
-                    if name == options.download:
-                        fetchlist.append((id, name, version, uploads))
-                elif not options.type or options.type == type:
-                    if re.search(options.download, name):
-                        fetchlist.append((id, name, version, uploads))
+	fetchlist = search_addons(campaign_list, options.download)
 
 	if len(fetchlist) == 0:
 		print "No addon found"
@@ -264,11 +269,20 @@ if __name__ == "__main__":
         decoded = cs.decode(data)
         print "Unpacking %s..." % options.unpack
         cs.unpackdir(decoded, options.campaigns_dir,  verbose = True)
+
     elif options.remove:
         cs = CampaignClient(address)
-        data = cs.delete_campaign(options.remove, options.login, options.password)
-       	for message in data.find_all("message", "error"):
-    		print message.get_text_val("message")
+        campaign_list = cs.list_campaigns()
+	fetchlist = search_addons(campaign_list, options.remove)
+
+	if len(fetchlist) == 0:
+		print "No addon found"
+	
+	for id, name, version, uploads in fetchlist:
+		print "Trying to remove addon name:", name
+		data = cs.delete_campaign(id, options.login, options.password)
+	       	for message in data.find_all("message", "error"):
+	    		print message.get_text_val("message")
 
     elif options.change_passphrase:
         cs = CampaignClient(address)
@@ -278,11 +292,6 @@ if __name__ == "__main__":
 
     elif options.upload:
         cs = CampaignClient(address)
-	#if os.path.isfile(options.upload) and re.match(r"^.*wml$", options.upload) != None:
-	#	data = file(options.upload).read()
-	#	cs.put_raw_campaign(data, options.login, options.password)
-	#else:
-	#	print "argument must be wml file"
 	
         if os.path.isdir(options.upload):
             # New style with _server.pbl
