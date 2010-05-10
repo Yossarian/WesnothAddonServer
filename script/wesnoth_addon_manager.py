@@ -119,7 +119,7 @@ if __name__ == "__main__":
 	    if decoded.get_text_val("name") != None:
 		name = decoded.get_text_val("name")
 
-            dirname = os.path.join(cdir, name)
+            dirname = os.path.join(cdir.strip(), name.strip())
             oldcfg_path = os.path.join(cdir, name + ".cfg")
 
             # Try to remove old campaign in case it exists.

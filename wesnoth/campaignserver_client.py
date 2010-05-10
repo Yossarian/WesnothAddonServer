@@ -403,7 +403,7 @@ class CampaignClient:
             if verbose:
                 sys.stderr.write(i * " " + name + " (" +
                       str(len(contents)) + ")\n")
-            save = file( os.path.join(path, name), "wb")
+            save = file( os.path.join(path.strip(), name.strip()), "wb")
 
             # We MUST un-escape our data
             # Order we apply escape sequences matter here
@@ -414,7 +414,9 @@ class CampaignClient:
         for dir in data.get_all("dir"):
             name = dir.get_text_val("name", "?")
             shutil.rmtree(os.path.join(path, name), True)
-            os.mkdir(os.path.join(path, name))
+            mk = os.path.join(path, name).strip()
+            if path == ".": mk = name.strip()
+            os.mkdir(mk.strip())
             if verbose:
                 sys.stderr.write(i * " " + name + "\n")
             self.unpackdir(dir, os.path.join(path, name), i + 2, verbose)
