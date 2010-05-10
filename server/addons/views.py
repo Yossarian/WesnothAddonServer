@@ -79,10 +79,7 @@ def details(request, addon_id):
 		addon.file_size = addon.file_tbz.size
 	except (IOError, NameError, ValueError, OSError):
 		addon.file_size = False
-	if 'wml' in request.GET:
-		return HttpResponse(detailsText(addon))
-	else:
-		return render_to_response('addons/details.html', {'addon': addon})
+	return render_to_response('addons/details.html', {'addon': addon})
 
 def getFile(request, addon_id):
 	logger.info("Download of addon "+str(addon_id)+" requested from "+request.META['REMOTE_ADDR']);
@@ -105,7 +102,10 @@ def rate(request, addon_id):
 			return wml_error_response("Wrong rating value", "Wrong rating value. This may signal a game version vs. server version mismatch.")
 		else:
 			return HttpResponseServerError("bad rating value")
-	addon = Addon.objects.get(id=addon_id)
+	try:
+		addon = Addon.get_addon(addon_id)
+	except (Addon.DoesNotExist):
+		raise Http404
 	r = Rating()
 	r.value = value
 	r.ip = request.get_host()
