@@ -79,10 +79,7 @@ def details(request, addon_id):
 		addon.file_size = addon.file_tbz.size
 	except (IOError, NameError, ValueError, OSError):
 		addon.file_size = False
-	if 'wml' in request.GET:
-		return HttpResponse(detailsText(addon))
-	else:
-		return render_to_response('addons/details.html', {'addon': addon})
+	return render_to_response('addons/details.html', {'addon': addon})
 
 def getFile(request, addon_id):
 	logger.info("Download of addon "+str(addon_id)+" requested from "+request.META['REMOTE_ADDR']);

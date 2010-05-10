@@ -1,10 +1,3 @@
-"""
-This file demonstrates two different styles of tests (one doctest and one
-unittest). These will both pass when you run "manage.py test".
-
-Replace these with more appropriate tests for your application.
-"""
-
 from django.test import TestCase
 from django.test import Client
 from addons.models import *
@@ -20,29 +13,29 @@ class SimpleTest(TestCase):
 	def test_get_tating(self):
 		a = Addon.objects.get(id=3)
 		self.assertEquals(a.get_rating(), 3.0)
-		
-	def test_details_script_iface(self):
-		#Test if specyfing simple iface in GET renders text output for details
-		addon = Addon.objects.get(id=3)
-		response = self.client.get('/addons/details/3', {'simple_iface' : 'true'}, follow=True)
-		self.assertEquals(response.content, detailsText(addon))
 	
-	def test_addonList_script_iface(self):
-		#Test if specyfing simple iface in GET renders text output for addonList
-		response = self.client.get('/addons/', {'simple_iface' : 'true'}, follow=True)
-		self.assertEquals(response.content, addonListText().content)
+	def test_addonList_wml_iface(self):
+		#Test if specyfing wml iface in GET renders text output for addonList
+		response = self.client.get('/addons/', {'wml' : 'true'}, follow=True)
+		self.assertTemplateUsed(response, "addons/addonList.wml")
+		
+	def test_addonList_www_iface(self):
+		#Test if not specyfing wml iface in GET renders text output for addonList
+		response = self.client.get('/addons/', follow=True)
+		self.assertTemplateUsed(response, "addons/addonList.html")
 	
 	def test_nonexisting_addon_details(self):
 		#Test if request for a nonexisting addon id results in 404
 		response = self.client.get('/addons/details/0', follow=True)
-		self.assertContaints(response, status_code=404)
+		self.assertEquals(response.status_code, 404)
 	
 	def test_nonexisting_addon_remove(self):
 		#Test if request for a nonexisting addon id results in 404
 		response = self.client.get('/addons/remove/0', follow=True)
-		self.assertContaints(response, status_code=404)
+		self.assertEquals(response.status_code, 404)
 	
 	def test_nonexisting_addon_rate(self):
 		#Test if request for a nonexisting addon id results in 404
 		response = self.client.get('/addons/rate/0', follow=True)
-		self.assertContaints(response, status_code=404)
+		self.assertEquals(response.status_code, 404)
+	
