@@ -105,7 +105,10 @@ def rate(request, addon_id):
 			return wml_error_response("Wrong rating value", "Wrong rating value. This may signal a game version vs. server version mismatch.")
 		else:
 			return HttpResponseServerError("bad rating value")
-	addon = Addon.objects.get(id=addon_id)
+	try:
+		addon = Addon.get_addon(addon_id)
+	except (Addon.DoesNotExist):
+		raise Http404
 	r = Rating()
 	r.value = value
 	r.ip = request.get_host()
