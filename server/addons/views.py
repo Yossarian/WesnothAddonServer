@@ -96,16 +96,16 @@ def getFile(request, addon_id):
 
 def rate(request, addon_id):
 	try:
+		addon = Addon.get_addon(addon_id)
+	except (Addon.DoesNotExist):
+		raise Http404
+	try:
 		value = int(request.POST['rating'])
 	except (KeyError, ValueError):
 		if 'wml' in request.GET:
 			return wml_error_response("Wrong rating value", "Wrong rating value. This may signal a game version vs. server version mismatch.")
 		else:
-			return HttpResponseServerError("bad rating value")
-	try:
-		addon = Addon.get_addon(addon_id)
-	except (Addon.DoesNotExist):
-		raise Http404
+			return HttpResponseServerError("bad rating value")	
 	r = Rating()
 	r.value = value
 	r.ip = request.get_host()
@@ -300,6 +300,19 @@ def removeForm(request, addon_id):
 	return render_to_response('addons/confirmRemove.html', {'addon_id':addon_id,'addon': addon})
 	
 def remove(request, addon_id):
+	try:
+		addon = Addon.get_addon(addon_id)
+	except (Addon.DoesNotExist):
+		if 'wml' in request.GET:
+			return wml_error_response("Could not remove addon from server", "Addon not found")
+		else:
+			raise Http404
+	
+	if('login' not in request.POST or 'password' not in request.POST):
+		if 'wml' in request.GET:
+			return wml_error_response("Could not remove addon from server", "Login and/or password incorrect")
+		else:
+			return render_to_response('addons/error.html', { 'errorType':'No login or password', 'errorDesc': ['Login and/or password was not supplied']})
 	logger.info("Attempt to remove addon from "+request.META['REMOTE_ADDR']);
 	login = request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
@@ -317,11 +330,11 @@ def remove(request, addon_id):
 	if (errors_credentials):
 		logger.info("Attempt to login as "+login+" from "+request.META['REMOTE_ADDR']+" failed during an attempt to remove addon #"+addon_id+"("+addon.name+")");
 		if 'wml' in request.GET:
-			return wml_message_response("Could not remove addon from server", "Login and/or password incorrect")
+			return wml_error_response("Could not remove addon from server", "Login and/or password incorrect")
 	if (errors_permissions):
 		logger.info("Attempt to remove addon #"+addon_id+"("+addon.name+") by "+login+" from "+request.META['REMOTE_ADDR']+" failed due to insufficient permissions.");
 		if 'wml' in request.GET:
-			return wml_message_response("Could not remove addon from server", "You don't have permission to remove this addon")
+			return wml_error_response("Could not remove addon from server", "You don't have permission to remove this addon")
 	return render_to_response('addons/confirmRemove.html',
 							  {'addon_id':addon_id,
 							   'addon': addon, 'errors_credentials':errors_credentials,
