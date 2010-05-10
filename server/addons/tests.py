@@ -18,7 +18,7 @@ class SimpleTest(TestCase):
 		a = Addon.objects.get(id=3)
 		self.assertEquals(a.get_rating(), 3.0)
 	
-	def test_rate(self):
+	def test_rate_www(self):
 		response = self.client.post('/addons/rate/3/', {'rating' : 5}, follow=True)
 		#Did server accept the rating?
 		self.assertEquals(response.status_code, 200)
@@ -31,6 +31,16 @@ class SimpleTest(TestCase):
 		#Was the rating updated correctly?
 		a = Addon.objects.get(id=3)
 		self.assertEquals(a.get_rating(), 4.0)
+	
+	def test_rate_by_name_wml(self):
+		response = self.client.post('/addons/rate/Brave Wings/?wml', {'rating' : 5}, follow=True)
+		#Did server accept the rating?
+		self.assertEquals(response.status_code, 200)
+		#Did server respond with the wml message template?
+		self.assertTemplateUsed(response, "addons/message.wml")
+		#Was the rating updated correctly?
+		a = Addon.objects.get(id=11)
+		self.assertEquals(a.get_rating(), 5.0)
 	
 	def test_addonList_wml_iface(self):
 		#Test if specyfing wml iface in GET renders text output for addonList
@@ -109,6 +119,19 @@ class RemoveAddon(TestCase):
 		#Test if addon gets removed with admin provileges
 		args = {'login' : 'admin', 'password' : 'admin'}
 		response = self.client.post('/addons/remove/11/', args, follow=True)
+		#Did server accept the request?
 		self.assertEquals(response.status_code, 200)
+		#Did server respond with the correct template?
+		self.assertTemplateUsed(response, "addons/confirmRemove.html")
+		self.assertEquals(response.context['remove_success'], True)
+	
+	def test_wml_remove_admin(self):
+		#Test if addon gets removed with admin provileges
+		args = {'login' : 'admin', 'password' : 'admin'}
+		response = self.client.post('/addons/remove/Brave Wings/?wml', args, follow=True)
+		#Did server accept the request?
+		self.assertEquals(response.status_code, 200)
+		#Did server respond with the correct template?
+		self.assertTemplateUsed(response, "addons/message.wml")
 		
 		
