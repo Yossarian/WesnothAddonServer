@@ -14,9 +14,23 @@ class SimpleTest(TestCase):
 	#Any change to the test database must be explicitly reflected
 	#in test code unless the test doesn't reference the database.
 	#Changes the test code makes to the database are not persistent.
-	def test_get_tating(self):
+	def test_get_rating(self):
 		a = Addon.objects.get(id=3)
 		self.assertEquals(a.get_rating(), 3.0)
+	
+	def test_rate(self):
+		response = self.client.post('/addons/rate/3/', {'rating' : 5}, follow=True)
+		#Did server accept the rating?
+		self.assertEquals(response.status_code, 200)
+		#Was the correct rating received?
+		self.assertEquals(response.context['rate_val'], 5)
+		#Did server respond with the details template again?
+		self.assertTemplateUsed(response, "addons/details.html")
+		#Was the user informed he has rated successfully?
+		self.assertEquals(response.context['rated'], True)
+		#Was the rating updated correctly?
+		a = Addon.objects.get(id=3)
+		self.assertEquals(a.get_rating(), 4.0)
 	
 	def test_addonList_wml_iface(self):
 		#Test if specyfing wml iface in GET renders text output for addonList
@@ -49,6 +63,14 @@ class SimpleTest(TestCase):
 	
 	def test_download_www(self):
 		response = self.client.get('/addons/download/11/', follow=True)
+		self.assertTrue(response.content.startswith('BZ'))
+	
+	def test_download_by_name_wml(self):
+		response = self.client.get('/addons/download/Brave Wings/?wml', follow=True)
+		self.assertContains(response, '[campaign]', status_code=200)
+	
+	def test_download_by_name_www(self):
+		response = self.client.get('/addons/download/Brave Wings/', follow=True)
 		self.assertTrue(response.content.startswith('BZ'))
 		
 	
