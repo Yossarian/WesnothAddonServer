@@ -7,4 +7,4 @@ register = template.Library()
 @register.filter
 @stringfilter
 def wml_escape(value):
-	return value.replace('"', '""');
+	return '"' + value.replace('"', '""') + '"';
