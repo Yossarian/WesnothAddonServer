@@ -1,4 +1,4 @@
-import os, subprocess, unittest, codecs, time, filecmp
+import os, subprocess, unittest, codecs, time, filecmp, shutil, os.path
 #test.db fixture to be loaded manually.
 
 if not os.name == 'nt': 
@@ -10,7 +10,8 @@ class TestClass(unittest.TestCase):
 	
 	def test_addonList(self):
 		somefile = file("list.txt","w")
-		proc = subprocess.Popen(wam_cmd + " -l", shell = True, stdout = somefile)
+		args = ["python", wam_cmd, "-l"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile)
 		somefile.close()
 		while proc.poll() == None:
 			time.sleep(0.001)
@@ -22,7 +23,8 @@ class TestClass(unittest.TestCase):
 		
 	def test_nonexisting_addon_download(self):
 		somefile = file("down_null.txt","w")
-		proc = subprocess.Popen(wam_cmd + " -d sdfkln3df-foobar", shell = True, stdout = somefile)
+		args = ["python", wam_cmd, "-d", "sdfkln3df-foobar"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		out = ''
@@ -32,27 +34,30 @@ class TestClass(unittest.TestCase):
 		self.assertTrue('No addon found' in out)
 		
 	def test_existing_addon_download(self):
+		if os.path.exists("Brave Wings"):
+			shutil.rmtree("Brave Wings")
 		somefile = file("down.txt","w")
-		args = [wam_cmd, " -d", "Brave Wings"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile)
+		args = ["python", wam_cmd, "-d", "Brave Wings"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		self.assertTrue(os.path.exists("Brave Wings"))
-
+	
 	def test_existing_publish(self):
 		somefile = file("publish.txt","w")
-		args = [wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "autor1", "-P", "autor1"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile, stderr = somefile)
+		args = ["python", wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "admin", "-P", "admin"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		out = ''
 		for line in codecs.open("publish.txt"):
 			out = out + line
 		self.assertTrue('Addon published successfully' in out)
-
+	
 	def test_nonexisting_publish(self):
 		somefile = file("publish_null.txt","w")
-		proc = subprocess.Popen(wam_cmd + " -u fooooooobar", shell = True, stdout = somefile, stderr = somefile)
+		args = ["python", wam_cmd, "-u", "fooooooobar"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		out = ''
@@ -62,14 +67,17 @@ class TestClass(unittest.TestCase):
 		self.assertTrue('Cannot open file fooooooobar' in out)
 		
 	def test_downloaded_content(self):
+		if os.path.exists("Brave Wings"):
+			shutil.rmtree("Brave Wings")
 		somefile = file("publish.txt","w")
-		args = [wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "autor1", "-P", "autor1"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile, stderr = somefile)
+		args = ["python", wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "admin", "-P" ,"admin"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		
 		somefile = file("down_content.txt","w")
-		proc = subprocess.Popen(wam_cmd + " -d \"Brave Wings*\"", shell = True, stdout = somefile)
+		args = ["python", wam_cmd, "-d", "Brave Wings"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		dircomp = filecmp.dircmp("Brave Wings","../test_data/game_publish_test/Brave Wings", ignore = ['_server.pbl','_info.cfg'])
@@ -79,15 +87,16 @@ class TestClass(unittest.TestCase):
 		
 	def test_remove_published(self):
 		somefile = file("remove.txt","w")
-		args = [wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "autor1", "-P", "autor1"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile, stderr = somefile)
+		args = ["python", wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "admin", "-P" ,"admin"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
-		args = [wam_cmd, "-r", "Brave Wings","-L", "autor1", "-P", "autor1"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile)
+		args = ["python", wam_cmd, "-r", "Brave Wings","-L", "admin", "-P", "admin"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
-		proc = subprocess.Popen(wam_cmd + " -d \"Brave Wings*\"", shell = True, stdout = somefile)
+		args = ["python", wam_cmd, "-d", "\"Brave Wings*\""]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		out = ''
@@ -98,14 +107,14 @@ class TestClass(unittest.TestCase):
 	
 	def test_update_no_credentials(self):
 		somefile = file("publish.txt","w")
-		args = [wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "autor1", "-P", "autor1"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile, stderr = somefile)
+		args = ["python", wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "admin", "-P", "admin"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		
 		somefile = file("publish_illegal.txt","w")
-		args = [wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "autor3", "-P", "autor3"]
-		proc = subprocess.Popen(args, shell = True, stdout = somefile, stderr = somefile)
+		args = ["python", wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "autor2", "-P", "autor2"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		
@@ -113,6 +122,9 @@ class TestClass(unittest.TestCase):
 		for line in codecs.open("publish_illegal.txt"):
 			out = out + line
 		self.assertTrue('This user is not one of authors' in out)
-		
+	
+	#def tearDown(self):
+		#if os.path.exists("Brave Wings"):
+			#shutil.rmtree("Brave Wings")	
 if __name__ == '__main__':
     unittest.main()

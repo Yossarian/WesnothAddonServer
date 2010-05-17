@@ -101,6 +101,8 @@ def rate(request, addon_id):
 		raise Http404
 	try:
 		value = int(request.POST['rating'])
+		if value < 1 or value > 5:
+			raise ValueError("Bad rating")
 	except (KeyError, ValueError):
 		if 'wml' in request.GET:
 			return wml_error_response("Wrong rating value", "Wrong rating value. This may signal a game version vs. server version mismatch.")
@@ -192,17 +194,17 @@ def publish(request):
 		file_data = file_wml.read().encode('ascii', 'ignore')
 	else:
 		if 'wml' not in request.POST:
-			print 'debug: error no wml file data'
+			#print 'debug: error no wml file data'
 			logger.info("Attempt to publish an addon by %s from %s failed: no WML"
 				% (login, request.META['REMOTE_ADDR']))
-			return error_response('File error', ['No WML file data'])
+			return error_response('File error', ['No WML file data'], errors_pbl=True)
 		file_data = request.POST['wml'].encode('ascii', 'ignore')
 
 	try:
 		decoded_wml = cs.decode(file_data)
 	except Exception as e:
-		print "wml decoding error: ", e
-		return error_response('File error', ['WML decoding error'])
+		#print "wml decoding error: ", e
+		return error_response('File error', ['WML decoding error'], errors_pbl=True)
 
 	keys_vals = {}
 	for k in ["title", "author", "description", "version", "icon", "type"]:
@@ -210,18 +212,18 @@ def publish(request):
 		if not keys_vals[k] is None:
 			keys_vals[k] = keys_vals[k].strip()
 		if keys_vals[k] is None or len(keys_vals[k]) < 1:
-			print 'debug: WML key error (PBL IN WML)'
+			#print 'debug: WML key error (PBL IN WML)'
 			return error_response('WML key error', 'Mandatory key %s missing' % k)
 
 	try:
 		addon_type = AddonType.objects.get(type_name=keys_vals['type'])
 	except ObjectDoesNotExist:
-		return error_response('WML PBL error', ['Addon has a wrong type'])
+		return error_response('WML PBL error', ['Addon has a wrong type'], errors_pbl=True)
 
 	try:
 		addon = Addon.objects.get(name=keys_vals['title'])
 		if len(addon.authors.filter(name=login)) == 0:
-			return error_response('Author error', ['This user is not one of authors'])
+			return error_response('Author error', ['This user is not one of authors'], errors_author=True)
 		addon.uploads += 1
 	except ObjectDoesNotExist:
 		addon = Addon()
@@ -236,7 +238,7 @@ def publish(request):
 	if file_wml != None:
 		file_wml.name = addon.name + '.wml'
 	else:
-		file = open(os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".wml", 'w')
+		file = open(os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".wml", 'wb')
 		file.write(file_data)
 		file.close()
 		file_wml =  "addons/" + addon.name + ".wml"

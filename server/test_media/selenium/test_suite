@@ -8,9 +8,16 @@
 <body>
 <table id="suiteTable" cellpadding="1" cellspacing="1" border="1" class="selenium"><tbody>
 <tr><td><b>Test Suite</b></td></tr>
-<tr><td><a href="aetheryn_details">Aethaeryn's details</a></td></tr>
-<tr><td><a href="aetheryn_rate">Aetheryn's rate 4</a></td></tr>
-<tr><td><a href="null_details">Non-existent details</a></td></tr>
+<tr><td><a href="aetheryn_details_case">aetheryn_details_case</a></td></tr>
+<tr><td><a href="bravewings_download_case">BraveWings_download_case</a></td></tr>
+<tr><td><a href="addon_list_case">addon_list_case</a></td></tr>
+<tr><td><a href="colosseum_publish_case">colosseum_publish_case</a></td></tr>
+<tr><td><a href="colosseum_illegal_upload_case">colosseum_illegal_upload_case</a></td></tr>
+<tr><td><a href="colosseum_illegal_remove_case">colosseum_illegal_remove_case</a></td></tr>
+<tr><td><a href="aetheryn_rate_case">aetheryn_rate_case</a></td></tr>
+<tr><td><a href="null_details_case">null_details_case</a></td></tr>
+<tr><td><a href="colosseum_remove_case">colosseum_remove_case</a></td></tr>
+<tr><td><a href="credentials_error_case">credentials_error_case</a></td></tr>
 </tbody></table>
 </body>
 </html>
