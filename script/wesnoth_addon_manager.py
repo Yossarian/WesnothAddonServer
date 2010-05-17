@@ -91,9 +91,6 @@ if __name__ == "__main__":
     optionparser.add_option("-U", "--unpack",
         help = "unpack the file UNPACK as a binary WML packet " +
         "(specify the add-on path with -c)")
-    optionparser.add_option("--change-passphrase", nargs = 3,
-        metavar = "ADD-ON OLD NEW",
-        help = "Change the passphrase for ADD-ON from OLD to NEW")
     options, args = optionparser.parse_args()
 
     port = options.port
@@ -283,12 +280,6 @@ if __name__ == "__main__":
 		data = cs.delete_campaign(id, options.login, options.password)
 	       	for message in data.find_all("message", "error"):
 	    		print message.get_text_val("message")
-
-    elif options.change_passphrase:
-        cs = CampaignClient(address)
-        data = cs.change_passphrase(*options.change_passphrase)
-        for message in data.find_all("message", "error"):
-            print message.get_text_val("message")
 
     elif options.upload:
         cs = CampaignClient(address)
