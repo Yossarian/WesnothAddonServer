@@ -51,6 +51,12 @@ class SimpleTest(TestCase):
 		#Test if not specyfing wml iface in GET renders text output for addonList
 		response = self.client.get('/addons/', follow=True)
 		self.assertTemplateUsed(response, "addons/addonList.html")
+		
+	def test_addon_details(self):
+		#Test if request for a nonexisting addon id results in 404
+		response = self.client.get('/addons/details/11', follow=True)
+		self.assertTemplateUsed(response, "addons/details.html")
+		self.assertEquals(response.status_code, 200)
 	
 	def test_nonexisting_addon_details(self):
 		#Test if request for a nonexisting addon id results in 404
@@ -70,6 +76,10 @@ class SimpleTest(TestCase):
 	def test_download_wml(self):
 		response = self.client.get('/addons/download/11/?wml', follow=True)
 		self.assertContains(response, '[campaign]', status_code=200)
+		
+	def test_download_wml_nonexisting(self):
+		response = self.client.get('/addons/download/0/?wml', follow=True)
+		self.assertEquals(response.status_code, 404)
 	
 	def test_download_www(self):
 		response = self.client.get('/addons/download/11/', follow=True)
@@ -114,6 +124,13 @@ class RemoveAddon(TestCase):
 		tbz_file.close()
 		self.tmp_wml_file.close()
 		self.tmp_tbz_file.close()
+		
+	def test_www_remove_nonexisting_admin(self):
+		#Test if addon gets removed with admin provileges
+		args = {'login' : 'admin', 'password' : 'admin'}
+		response = self.client.post('/addons/remove/0/', args, follow=True)
+		#Did server accept the request?
+		self.assertEquals(response.status_code, 404)
 		
 	def test_www_remove_admin(self):
 		#Test if addon gets removed with admin provileges
