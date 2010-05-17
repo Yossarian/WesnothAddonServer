@@ -317,10 +317,15 @@ def remove(request, addon_id):
 	login = request.POST['login']
 	user = authenticate(username=login, password=request.POST['password'])
 
+	is_super = False
+	if user != None:
+		is_super = user.is_superuser
+
 	addon = Addon.get_addon(addon_id)
 
 	errors_credentials = ( user == None )
-	errors_permissions = ( len(addon.authors.filter(name=login)) == 0 )
+	errors_permissions = ( not is_super and
+				len(addon.authors.filter(name=login)) == 0 )
 	
 	if not (errors_permissions or errors_credentials):
 		addon.delete()
