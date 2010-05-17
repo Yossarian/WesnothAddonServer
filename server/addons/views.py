@@ -236,7 +236,7 @@ def publish(request):
 	if file_wml != None:
 		file_wml.name = addon.name + '.wml'
 	else:
-		file = open(os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".wml", 'w')
+		file = open(os.path.join(MEDIA_ROOT, "addons/") + addon.name + ".wml", 'wb')
 		file.write(file_data)
 		file.close()
 		file_wml =  "addons/" + addon.name + ".wml"
