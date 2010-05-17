@@ -99,6 +99,11 @@ class SimpleTest(TestCase):
 	def test_download_by_name_www(self):
 		response = self.client.get('/addons/download/Brave Wings/', follow=True)
 		self.assertTrue(response.content.startswith('BZ'))
+	
+	def test_publish_fail(self):
+		response = self.client.post('/addons/publish/', {'login' : 'admin', 'password' : 'admin', 'wml' : ''}, follow=True)
+		self.assertEquals(response.status_code, 200)
+		self.assertTemplateUsed(response, "addons/publishForm.html")
 		
 	
 class RemoveAddon(TestCase):

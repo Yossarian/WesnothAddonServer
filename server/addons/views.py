@@ -194,7 +194,7 @@ def publish(request):
 		file_data = file_wml.read().encode('ascii', 'ignore')
 	else:
 		if 'wml' not in request.POST:
-			print 'debug: error no wml file data'
+			#print 'debug: error no wml file data'
 			logger.info("Attempt to publish an addon by %s from %s failed: no WML"
 				% (login, request.META['REMOTE_ADDR']))
 			return error_response('File error', ['No WML file data'], errors_pbl=True)
@@ -203,7 +203,7 @@ def publish(request):
 	try:
 		decoded_wml = cs.decode(file_data)
 	except Exception as e:
-		print "wml decoding error: ", e
+		#print "wml decoding error: ", e
 		return error_response('File error', ['WML decoding error'], errors_pbl=True)
 
 	keys_vals = {}
@@ -212,7 +212,7 @@ def publish(request):
 		if not keys_vals[k] is None:
 			keys_vals[k] = keys_vals[k].strip()
 		if keys_vals[k] is None or len(keys_vals[k]) < 1:
-			print 'debug: WML key error (PBL IN WML)'
+			#print 'debug: WML key error (PBL IN WML)'
 			return error_response('WML key error', 'Mandatory key %s missing' % k)
 
 	try:
