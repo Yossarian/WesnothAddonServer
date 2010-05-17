@@ -41,6 +41,13 @@ class SimpleTest(TestCase):
 		#Was the rating updated correctly?
 		a = Addon.objects.get(id=11)
 		self.assertEquals(a.get_rating(), 5.0)
+		
+	def test_rate_by_name_badval_wml(self):
+		response = self.client.post('/addons/rate/Brave Wings/?wml', {'rating' : 7}, follow=True)
+		#Did server accept the rating?
+		self.assertEquals(response.status_code, 200)
+		#Did server respond with the wml message template?
+		self.assertTemplateUsed(response, "addons/error.wml")
 	
 	def test_addonList_wml_iface(self):
 		#Test if specyfing wml iface in GET renders text output for addonList
