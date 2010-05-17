@@ -362,6 +362,7 @@ if __name__ == "__main__":
                 info = os.path.join(d, "_info.cfg")
                 sversion = campaigns[dirname].get_text_val("version", "")
                 srev = campaigns[dirname].get_text_val("uploads", "")
+                id = campaigns[dirname].get_text_val("remote_id", "")
                 if os.path.exists(info):
                     lrev, lversion = get_info(info)
                     if not srev:
@@ -377,17 +378,17 @@ if __name__ == "__main__":
                             (lrev, srev))
                         if srev > lrev: # server reset?
                             if options.update:
-                                get(dirname, sversion, srev, cdir)
+                                get(id, dirname, sversion, srev, cdir)
                     else:
                         sys.stdout.write(" * " + dirname + " - you have " +
                             "revision " + lrev + " but revision " + srev +
                             " is available.\n")
-                        if options.update: get(dirname, sversion, srev, cdir)
+                        if options.update: get(id, dirname, sversion, srev, cdir)
                 else:
                     sys.stdout.write(" ? " + dirname + 
                         " - is installed but has no " +
                         "version info.\n")
-                    if options.update: get(dirname, sversion, srev, cdir)
+                    if options.update: get(id, dirname, sversion, srev, cdir)
             else:
                 sys.stdout.write(" - %s - is installed but not on server.\n" %
                     dirname)
