@@ -1,4 +1,4 @@
-import os, subprocess, unittest, codecs, time, filecmp
+import os, subprocess, unittest, codecs, time, filecmp, shutil, os.path
 #test.db fixture to be loaded manually.
 
 if not os.name == 'nt': 
@@ -10,7 +10,7 @@ class TestClass(unittest.TestCase):
 	
 	def test_addonList(self):
 		somefile = file("list.txt","w")
-		args = ["python", wam_cmd,"-l"]
+		args = ["python", wam_cmd, "-l"]
 		proc = subprocess.Popen(args, shell = False, stdout = somefile)
 		somefile.close()
 		while proc.poll() == None:
@@ -34,6 +34,8 @@ class TestClass(unittest.TestCase):
 		self.assertTrue('No addon found' in out)
 		
 	def test_existing_addon_download(self):
+		if os.path.exists("Brave Wings"):
+			shutil.rmtree("Brave Wings")
 		somefile = file("down.txt","w")
 		args = ["python", wam_cmd, "-d", "Brave Wings"]
 		proc = subprocess.Popen(args, shell = False, stdout = somefile)
@@ -65,6 +67,8 @@ class TestClass(unittest.TestCase):
 		self.assertTrue('Cannot open file fooooooobar' in out)
 		
 	def test_downloaded_content(self):
+		if os.path.exists("Brave Wings"):
+			shutil.rmtree("Brave Wings")
 		somefile = file("publish.txt","w")
 		args = ["python", wam_cmd, "-u", "../test_data/game_publish_test/Brave Wings","-L", "admin", "-P" ,"admin"]
 		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
@@ -72,15 +76,13 @@ class TestClass(unittest.TestCase):
 			time.sleep(0.001)
 		
 		somefile = file("down_content.txt","w")
-		args = ["python", wam_cmd, "-d", "\"Brave Wings*\""]
+		args = ["python", wam_cmd, "-d", "Brave Wings"]
+		proc = subprocess.Popen(args, shell = False, stdout = somefile, stderr = somefile)
 		while proc.poll() == None:
 			time.sleep(0.001)
 		dircomp = filecmp.dircmp("Brave Wings","../test_data/game_publish_test/Brave Wings", ignore = ['_server.pbl','_info.cfg'])
 		if not dircomp.diff_files == []:
 			somefile.write("Differing files: " + str(dircomp))
-		print "LEFT" + str(dircomp.left_list)
-		print "RIGHT" + str(dircomp.right_list)
-		print "DIFF" + str(dircomp.diff_files)
 		self.assertTrue(dircomp.left_list == dircomp.right_list and dircomp.diff_files == [])
 		
 	def test_remove_published(self):
@@ -121,5 +123,8 @@ class TestClass(unittest.TestCase):
 			out = out + line
 		self.assertTrue('This user is not one of authors' in out)
 	
+	#def tearDown(self):
+		#if os.path.exists("Brave Wings"):
+			#shutil.rmtree("Brave Wings")	
 if __name__ == '__main__':
     unittest.main()
