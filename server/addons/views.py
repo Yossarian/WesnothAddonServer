@@ -101,6 +101,8 @@ def rate(request, addon_id):
 		raise Http404
 	try:
 		value = int(request.POST['rating'])
+		if value < 1 or value > 5:
+			raise ValueError("Bad rating")
 	except (KeyError, ValueError):
 		if 'wml' in request.GET:
 			return wml_error_response("Wrong rating value", "Wrong rating value. This may signal a game version vs. server version mismatch.")
